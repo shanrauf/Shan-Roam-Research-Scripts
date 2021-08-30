@@ -109,12 +109,6 @@ function resolveCompletedObject(
   archiveBlock(pageUid, resolvedObjectUid);
 
   // Loop over every object that depends on this object and add object to Context attribute (just parent if task; qna if question)
-  let ancestorrule = `[ 
-    [ (ancestor ?b ?a) 
-         [?a :block/children ?b] ] 
-    [ (ancestor ?b ?a) 
-         [?parent :block/children ?b ] 
-         (ancestor ?parent ?a) ] ] ]`;
   const dependeeObjectUids = window.roamAlphaAPI.q(
     `[:find ?uids :in $ ?resolved-uid
       :where [?resolved :block/uid ?resolved-uid]
