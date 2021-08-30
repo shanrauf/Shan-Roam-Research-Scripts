@@ -1,25 +1,26 @@
-import { TreeNode } from 'roam-client';
-import { runExtension, replaceText, replaceTagText } from './entry-helpers';
+import { runExtension } from './entry-helpers';
 
 const extensionId = 'roam-personal-scripts';
 
 const archivedNotes = 'Archived Notes';
 const archivedNotesAttribute = `${archivedNotes}::`;
+const referencesAttribute = 'References::';
 
-function archiveBlock() {
-  const uidToArchive = window.roamAlphaAPI.ui.getFocusedBlock()['block-uid'];
-  if (!uidToArchive) return;
+function archiveBlock(pageUid: string, uidToArchive: string): void {
+  // const uidToArchive = window.roamAlphaAPI.ui.getFocusedBlock()['block-uid'];
+  // if (!uidToArchive) return;
 
   // Get or create Archived Notes attribute on the page
-  let [archivedNotesAttributeUid, pageUid] = window.roamAlphaAPI
-    .q(`[:find ?attr-uid ?page-uid :in $ ?block-uid
-                                                         :where [?b :block/uid ?block-uid]
-                                                                [?b :block/page ?p]
-                                                                [?p :block/uid ?page-uid]
-                                                                [?p :block/children ?c]
-                                                                [?a :node/title "Archived Notes"]
-                                                                [?c :block/refs ?a]
-                                                                [?c :block/uid ?attr-uid]]`)[0][0];
+  let archivedNotesAttributeUid = window.roamAlphaAPI.q(
+    `[:find ?attr-uid :in $ ?page-uid
+          :where[?p :block/uid ?page-uid]
+                [?p :block/children ?c]
+                [?a :node/title "${archivedNotes}"]
+                [?c :block/refs ?a]
+                [?c :block/uid ?attr-uid]]`,
+    pageUid
+  )?.[0]?.[0];
+
   if (!archivedNotesAttributeUid) {
     archivedNotesAttributeUid = window.roamAlphaAPI.util.generateUID();
     window.roamAlphaAPI.data.block.create({
@@ -37,7 +38,7 @@ function archiveBlock() {
   // Send the block to attribute
   window.roamAlphaAPI.data.block.move({
     location: {
-      'parent-uid': pageUid,
+      'parent-uid': archivedNotesAttributeUid,
       order: 0,
     },
     block: {
@@ -46,103 +47,156 @@ function archiveBlock() {
   });
 }
 
-function refactorBlock() {}
+function refactorBlock(pageUid: string, oldBlockUid: string): void {
+  // Create a new block right above the old one
+  const newBlockUid = window.roamAlphaAPI.util.generateUID();
+  const [parentBlockUid, oldBlockOrder] = window.roamAlphaAPI.q(
+    `[:find ?parent-uid ?old-order :in $ ?child-uid :where [?b :block/uid ?child-uid] [?b :block/parents ?p] [?p :block/children ?b] [?p :block/uid ?parent-uid] [?b :block/order ?old-order]]`,
+    oldBlockUid
+  )[0];
 
-function resolveCompletedObject() {}
+  window.roamAlphaAPI.data.block.create({
+    location: {
+      'parent-uid': parentBlockUid,
+      order: oldBlockOrder,
+    },
+    block: {
+      string: 'refactor',
+      uid: newBlockUid,
+    },
+  });
 
-type Shortcut = {
-  text: string;
-  callback: () => void;
-  uid: string;
-};
+  // Add a References attribute to the new block with a ref to the old block
+  const referencesAttributeUid = window.roamAlphaAPI.util.generateUID();
+  window.roamAlphaAPI.data.block.create({
+    location: {
+      'parent-uid': newBlockUid,
+      order: 0,
+    },
+    block: {
+      string: referencesAttribute,
+      uid: referencesAttributeUid,
+    },
+  });
+  window.roamAlphaAPI.data.block.create({
+    location: {
+      'parent-uid': referencesAttributeUid,
+      order: 0,
+    },
+    block: {
+      string: `((${oldBlockUid}))`,
+      uid: window.roamAlphaAPI.util.generateUID(),
+    },
+  });
 
-const shortcuts: { [key: string]: Shortcut } = {
-  'archive-block': {
-    uid: 'archive-block',
-    callback: archiveBlock,
-    text: 'CTRL+SHIFT+A',
-  },
-  refactor: {
-    uid: 'refactor',
-    callback: refactorBlock,
-    text: 'CTRL+SHIFT+W',
-  },
-  'resolve-completed-object': {
-    uid: 'resolve-completed-object',
-    callback: resolveCompletedObject,
-    text: 'CTRL+SHIFT+O',
-  },
-};
+  // Archive the old block
+  archiveBlock(pageUid, oldBlockUid);
 
-const config: { [blockUid: string]: (e: KeyboardEvent) => void } = {};
-const blockUidsByKeystroke: { [keystroke: string]: Set<string> } = {};
-const root = document.getElementsByClassName('roam-app')[0] || document;
+  // Open new block in sidebar
+  window.roamAlphaAPI.ui.rightSidebar.addWindow({
+    window: {
+      type: 'block',
+      'block-uid': newBlockUid,
+    },
+  });
+}
 
-const cleanConfig = (blockUid: string) => {
-  if (config[blockUid]) {
-    root.removeEventListener('keydown', config[blockUid]);
-    delete config[blockUid];
-    const uids = Object.values(blockUidsByKeystroke).find((v) =>
-      v.has(blockUid)
-    );
-    if (uids) {
-      uids.delete(blockUid);
-    }
-  }
-};
+function resolveCompletedObject(
+  pageUid: string,
+  resolvedObjectUid: string
+): void {
+  // Archive the resolved object
+  archiveBlock(pageUid, resolvedObjectUid);
 
-// Taken and modified from David Vargas tag-cycle code
-const configureShortcut = (shortcut: Shortcut) => {
-  const parts = shortcut.text.split('+').map((s) => s.toUpperCase().trim());
-  const modifier = parts[0];
-  const isShift = parts[1] === 'SHIFT';
-  const keyParts = parts[parts.length - 1].split(' ') || [''];
-  const key = keyParts[0];
-  const isTriggered = (e: KeyboardEvent) => {
-    if (modifier === 'ALT' && !e.altKey) {
-      return false;
-    }
-    if (modifier === 'OPT' && !e.altKey) {
-      return false;
-    }
-    if (modifier === 'CMD' && !e.metaKey) {
-      return false;
-    }
-    if (modifier === 'WIN' && !e.metaKey) {
-      return false;
-    }
-    if (modifier === 'CTRL' && !e.ctrlKey) {
-      return false;
-    }
-    if (isShift && !e.shiftKey) {
-      return false;
-    }
-    if (key === 'SPACE' && e.key === ' ') {
-      return true;
-    }
-    if (key === e.key.toUpperCase()) {
-      return true;
-    }
-    return false;
-  };
-  cleanConfig(shortcut.uid);
-  const keyStroke = [...parts.slice(0, parts.length - 1), key].join('+');
-  if (blockUidsByKeystroke[keyStroke]) {
-    blockUidsByKeystroke[keyStroke].add(shortcut.uid);
-  } else {
-    blockUidsByKeystroke[keyStroke] = new Set([shortcut.uid]);
-  }
-  config[shortcut.uid] = async (e: KeyboardEvent) => {
-    shortcut.callback();
-    e.preventDefault();
-    e.stopPropagation();
-  };
-  root.addEventListener('keydown', config[shortcut.uid]);
-};
+  // Loop over every object that depends on this object and add object to Context attribute (just parent if task; qna if question)
+  let ancestorrule = `[ 
+    [ (ancestor ?b ?a) 
+         [?a :block/children ?b] ] 
+    [ (ancestor ?b ?a) 
+         [?parent :block/children ?b ] 
+         (ancestor ?parent ?a) ] ] ]`;
+  const dependeeObjectUids = window.roamAlphaAPI.q(
+    `[:find ?uids :in $ ?resolved-uid
+      :where [?resolved :block/uid ?resolved-uid]
+             [?refs :block/refs ?resolved]
+             [?refs :block/parents ?parents]
+             [?parents :block/children ?refs]
+             [?parents :block/string "Depends On::"]
+             [?parents :block/parents ?blocks]
+             [?blocks :block/children ?parents]
+             [?blocks :block/uid ?uids]]`,
+    resolvedObjectUid
+  )[0];
+
+  dependeeObjectUids.forEach((dependeeUid) => {
+    // Remove the resolved object from Depends On
+    const dependsOnRefBlockUid = window.roamAlphaAPI.q(
+      `[:find ?uid :in $ ?dependee-uid ?resolved-uid
+        :where [?d :block/uid ?dependee-uid]
+               [?resolved :block/uid ?resolved-uid]
+               [?d :block/children ?c]
+               [?c :block/string "Depends On::"]
+               [?c :block/children ?deps]
+               [?deps :block/refs ?resolved]
+               [?deps :block/uid ?uid]]`,
+      dependeeUid,
+      resolvedObjectUid
+    )[0][0];
+    window.roamAlphaAPI.data.block.delete({
+      block: {
+        uid: dependsOnRefBlockUid,
+      },
+    });
+
+    // assuming it exists
+    const contextAttributeUid = window.roamAlphaAPI.q(
+      `[:find ?uid :in $ ?dependee-uid
+        :where [?d :block/uid ?dependee-uid]
+               [?d :block/children ?c]
+               [?c :block/string "Context::"]
+               [?c :block/uid ?uid]]`,
+      dependeeUid
+    )[0][0];
+
+    const resolvedBlockRefBlockUid = window.roamAlphaAPI.util.generateUID();
+
+    window.roamAlphaAPI.data.block.create({
+      location: {
+        'parent-uid': contextAttributeUid,
+        order: 0,
+      },
+      block: {
+        uid: resolvedBlockRefBlockUid,
+        string: `((${resolvedObjectUid}))`,
+      },
+    });
+  });
+}
 
 runExtension(extensionId, () => {
-  Object.values(shortcuts).forEach((shortcut) => {
-    configureShortcut(shortcut);
+  window.roamAlphaAPI.ui.blockContextMenu.addCommand({
+    label: 'Archive Block',
+    callback: (e) => {
+      const blockUid = e['block-uid'];
+      const pageUid = e['page-uid'];
+      archiveBlock(pageUid, blockUid);
+    },
+  });
+  window.roamAlphaAPI.ui.blockContextMenu.addCommand({
+    label: 'Refactor Block',
+    callback: (e) => {
+      const blockUid = e['block-uid'];
+      const pageUid = e['page-uid'];
+      refactorBlock(pageUid, blockUid);
+    },
+  });
+  window.roamAlphaAPI.ui.blockContextMenu.addCommand({
+    label: 'Resolve Block',
+    callback: (e) => {
+      const blockUid = e['block-uid'];
+      const pageUid = e['page-uid'];
+      resolveCompletedObject(pageUid, blockUid);
+    },
   });
   console.log(extensionId);
 });
