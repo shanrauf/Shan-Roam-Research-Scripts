@@ -1,5 +1,8 @@
+import { RoamQPullBlock } from './types';
+import { toRoamDateUid } from 'roam-client';
 import { runExtension } from './entry-helpers';
 import { setupSendBlock } from './send-block';
+import { setupConvertBlockPage } from './convert-block-page';
 
 declare global {
   interface Window {
@@ -13,9 +16,9 @@ const archivedNotes = 'Archived Notes';
 const archivedNotesAttribute = `${archivedNotes}::`;
 const referencesAttribute = 'References::';
 
-function archiveBlock(pageUid: string, uidToArchive: string): void {
-  // const uidToArchive = window.roamAlphaAPI.ui.getFocusedBlock()['block-uid'];
-  // if (!uidToArchive) return;
+function getOrCreateArchivedNotesAttribute(): string {
+  const todayDate = new Date();
+  const todayUid = toRoamDateUid(todayDate);
 
   // Get or create Archived Notes attribute on the page
   let archivedNotesAttributeUid = window.roamAlphaAPI.q(
@@ -25,36 +28,109 @@ function archiveBlock(pageUid: string, uidToArchive: string): void {
                 [?a :node/title "${archivedNotes}"]
                 [?c :block/refs ?a]
                 [?c :block/uid ?attr-uid]]`,
-    pageUid
+    todayUid
   )?.[0]?.[0];
 
   if (!archivedNotesAttributeUid) {
     archivedNotesAttributeUid = window.roamAlphaAPI.util.generateUID();
     window.roamAlphaAPI.data.block.create({
       location: {
-        'parent-uid': pageUid,
+        'parent-uid': todayUid,
         order: 0,
       },
       block: {
         string: archivedNotesAttribute,
         uid: archivedNotesAttributeUid,
+        open: false,
       },
     });
   }
-
-  // Send the block to attribute
-  window.roamAlphaAPI.data.block.move({
-    location: {
-      'parent-uid': archivedNotesAttributeUid,
-      order: 0,
-    },
-    block: {
-      uid: uidToArchive,
-    },
-  });
+  return archivedNotesAttributeUid;
 }
 
-function refactorBlock(pageUid: string, oldBlockUid: string): void {
+function archiveBlock(_: string, uidToArchive: string): void {
+  const archivedNotesAttributeUid = getOrCreateArchivedNotesAttribute();
+
+  // If this block is already ref'd in Archived Notes (because you've archived its children before), replace that ref with the ORIGINAL block
+  const blockAlreadyInArchivedNotes: RoamQPullBlock = window.roamAlphaAPI.q(
+    `[:find (pull ?c [:block/uid :block/string :block/children :block/order {:block/children 2}])
+      :in $ ?uidToArchive ?archive-attr
+      :where [?a :block/uid ?archive-attr]
+             [?u :block/uid ?uidToArchive]
+             [?a :block/children ?c]
+             [?c :block/refs ?u]]`,
+    uidToArchive,
+    archivedNotesAttributeUid
+  )?.[0]?.[0];
+  if (blockAlreadyInArchivedNotes) {
+    const { uid, children } = blockAlreadyInArchivedNotes;
+    window.roamAlphaAPI.data.block.move({
+      location: {
+        'parent-uid': archivedNotesAttributeUid,
+        order: 0,
+      },
+      block: {
+        uid: uidToArchive,
+      },
+    });
+    children.forEach((c) => {
+      const childUid = c.uid;
+      window.roamAlphaAPI.data.block.move({
+        location: {
+          'parent-uid': uidToArchive,
+          order: c.order,
+        },
+        block: {
+          uid: childUid,
+        },
+      });
+    });
+    window.roamAlphaAPI.data.block.delete({
+      block: {
+        uid,
+      },
+    });
+  } else {
+    const parentBlock: RoamQPullBlock = window.roamAlphaAPI.q(
+      `[:find (pull ?e [:block/uid :node/title]) :in $ ?child-uid :where [?c :block/uid ?child-uid] [?c :block/parents ?e] [?e :block/children ?c]]`,
+      uidToArchive
+    )?.[0]?.[0];
+    const parentBlockRef = parentBlock?.title
+      ? `[[${parentBlock.title}]]`
+      : `((${parentBlock.uid}))`;
+    let parentBlockInArchivedNotesUid: string = window.roamAlphaAPI.q(
+      `[:find ?uid :in $ ?archived-attr-uid ?ref-uid :where [?a :block/uid ?archived-attr-uid] [?a :block/children ?c] [?r :block/uid ?ref-uid] [?c :block/refs ?r] [?c :block/uid ?uid]]`,
+      archivedNotesAttributeUid,
+      parentBlock.uid
+    )?.[0]?.[0];
+    if (!parentBlockInArchivedNotesUid) {
+      parentBlockInArchivedNotesUid = window.roamAlphaAPI.util.generateUID();
+      window.roamAlphaAPI.data.block.create({
+        location: {
+          'parent-uid': archivedNotesAttributeUid,
+          order: 0,
+        },
+        block: {
+          uid: parentBlockInArchivedNotesUid,
+          string: parentBlockRef,
+        },
+      });
+    }
+
+    // Send the block to attribute
+    window.roamAlphaAPI.data.block.move({
+      location: {
+        'parent-uid': parentBlockInArchivedNotesUid,
+        order: 0,
+      },
+      block: {
+        uid: uidToArchive,
+      },
+    });
+  }
+}
+
+function refactorBlock(_: string, oldBlockUid: string): void {
   // Create a new block right above the old one
   const newBlockUid = window.roamAlphaAPI.util.generateUID();
   const [parentBlockUid, oldBlockOrder] = window.roamAlphaAPI.q(
@@ -68,44 +144,51 @@ function refactorBlock(pageUid: string, oldBlockUid: string): void {
       order: oldBlockOrder,
     },
     block: {
-      string: 'refactor',
+      string: `Refactor: ((${oldBlockUid}))`,
       uid: newBlockUid,
     },
   });
 
-  // Add a References attribute to the new block with a ref to the old block
-  const referencesAttributeUid = window.roamAlphaAPI.util.generateUID();
-  window.roamAlphaAPI.data.block.create({
+  // Duplicating code from archive block
+  const archivedNotesAttributeUid = getOrCreateArchivedNotesAttribute();
+  let parentBlockInArchivedNotesUid: string = window.roamAlphaAPI.q(
+    `[:find ?uid :in $ ?archived-attr-uid ?ref-uid :where [?a :block/uid ?archived-attr-uid] [?a :block/children ?c] [?r :block/uid ?ref-uid] [?c :block/refs ?r] [?c :block/uid ?uid]]`,
+    archivedNotesAttributeUid,
+    newBlockUid
+  )?.[0]?.[0];
+  if (!parentBlockInArchivedNotesUid) {
+    const parentBlockRef = `((${newBlockUid}))`;
+    parentBlockInArchivedNotesUid = window.roamAlphaAPI.util.generateUID();
+    window.roamAlphaAPI.data.block.create({
+      location: {
+        'parent-uid': archivedNotesAttributeUid,
+        order: 0,
+      },
+      block: {
+        uid: parentBlockInArchivedNotesUid,
+        string: parentBlockRef,
+      },
+    });
+  }
+
+  // Send the block to attribute
+  window.roamAlphaAPI.data.block.move({
     location: {
-      'parent-uid': newBlockUid,
+      'parent-uid': parentBlockInArchivedNotesUid,
       order: 0,
     },
     block: {
-      string: referencesAttribute,
-      uid: referencesAttributeUid,
-    },
-  });
-  window.roamAlphaAPI.data.block.create({
-    location: {
-      'parent-uid': referencesAttributeUid,
-      order: 0,
-    },
-    block: {
-      string: `((${oldBlockUid}))`,
-      uid: window.roamAlphaAPI.util.generateUID(),
+      uid: oldBlockUid,
     },
   });
 
-  // Archive the old block
-  archiveBlock(pageUid, oldBlockUid);
-
-  // Open new block in sidebar
   window.roamAlphaAPI.ui.rightSidebar.addWindow({
     window: {
       type: 'block',
-      'block-uid': newBlockUid,
+      'block-uid': parentBlockInArchivedNotesUid,
     },
   });
+  // TOOD: focus on new block in main view
 }
 
 function resolveCompletedObject(
@@ -211,6 +294,7 @@ runExtension(extensionId, () => {
   setupKeyboardShortcuts();
 
   setupSendBlock();
+  setupConvertBlockPage();
 
   console.log(`Initialized ${extensionId}`);
 });

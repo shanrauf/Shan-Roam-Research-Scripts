@@ -117,6 +117,7 @@ function onSendBlock(sendType: SendType): void {
   const sendToUid = blockPath[blockPath.length - 1].value;
 
   if (sendType === 'raw') {
+    console.log('HERE');
     window.roamAlphaAPI.data.block.move({
       location: {
         'parent-uid': sendToUid,
@@ -127,6 +128,7 @@ function onSendBlock(sendType: SendType): void {
       },
     });
   } else if (sendType === 'ref') {
+    console.log('HERE2');
     window.roamAlphaAPI.data.block.create({
       location: {
         'parent-uid': sendToUid,
@@ -158,6 +160,7 @@ export function setupSendBlock(): void {
         blockSearchEl.addEventListener('click', (e) => {
           const selectedEl = e.target as Element;
           addElToBlockPath(selectedEl, blockPath);
+          console.log({ blockPath });
         });
       }, 500);
     } else if (e.code === 'Backspace') {
@@ -170,13 +173,13 @@ export function setupSendBlock(): void {
           blockPath.pop();
         }
       }
-    } else if (e.shiftKey && e.code === 'Enter') {
-      if (document.querySelector('.rm-modal-dialog')) {
-        onSendBlock('raw');
-      }
     } else if (e.ctrlKey && e.altKey && e.code === 'Enter') {
       if (document.querySelector('.rm-modal-dialog')) {
         onSendBlock('ref');
+      }
+    } else if (e.shiftKey && e.code === 'Enter') {
+      if (document.querySelector('.rm-modal-dialog')) {
+        onSendBlock('raw');
       }
     } else if (e.code === 'Enter') {
       if (document.querySelector('.rm-modal-dialog')) {

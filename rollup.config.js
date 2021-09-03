@@ -11,8 +11,8 @@ const production = !process.env.ROLLUP_WATCH;
 
 export default {
   input: 'src/main.ts',
-  sourcemap: !production,
 	output: {
+		sourcemap: !production,
 		dir: 'build',
     format: 'iife',
 	},
