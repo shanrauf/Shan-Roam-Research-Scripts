@@ -205,7 +205,7 @@ function resolveCompletedObject(
              [?refs :block/refs ?resolved]
              [?refs :block/parents ?parents]
              [?parents :block/children ?refs]
-             [?parents :block/string "Depends On::"]
+             [?parents :block/string "Todos::"]
              [?parents :block/parents ?blocks]
              [?blocks :block/children ?parents]
              [?blocks :block/uid ?uids]]`,
@@ -214,7 +214,7 @@ function resolveCompletedObject(
 
   if (!dependeeObjectUids) {
     alert(
-      'Nothing depends on tis object; contact developer if this is a mistake'
+      'Nothing depends on this object; contact developer if this is a mistake'
     );
     return;
   }
@@ -226,7 +226,7 @@ function resolveCompletedObject(
         :where [?d :block/uid ?dependee-uid]
                [?resolved :block/uid ?resolved-uid]
                [?d :block/children ?c]
-               [?c :block/string "Depends On::"]
+               [?c :block/string "Todos::"]
                [?c :block/children ?deps]
                [?deps :block/refs ?resolved]
                [?deps :block/uid ?uid]]`,

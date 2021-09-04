@@ -177,7 +177,7 @@ export function setupSendBlock(): void {
       if (document.querySelector('.rm-modal-dialog')) {
         onSendBlock('ref');
       }
-    } else if (e.shiftKey && e.code === 'Enter') {
+    } else if (e.altKey && e.code === 'Enter') {
       if (document.querySelector('.rm-modal-dialog')) {
         onSendBlock('raw');
       }
