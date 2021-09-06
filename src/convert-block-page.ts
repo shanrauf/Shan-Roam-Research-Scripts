@@ -1,37 +1,96 @@
-import { getCurrentPageUid } from './entry-helpers';
-import { toRoamDateUid, getUids } from 'roam-client';
+import format from 'date-fns/format';
 import { RoamQPullBlock } from './types';
-function convertBlockToPage(blockUid: string): void {
-  const block: RoamQPullBlock = window.roamAlphaAPI.q(
-    `[:find (pull ?e [:block/string :block/children :block/order :block/uid {:block/children 2}]) :in $ ?uid :where [?e :block/uid ?uid]]`,
+
+const normalizePageTitle = (title: string) =>
+  title.replace(/\\/, '\\\\').replace(/"/g, '\\"');
+
+const getPageUidByPageTitle = (title: string): string =>
+  (window.roamAlphaAPI.q(
+    `[:find ?u :where [?e :block/uid ?u] [?e :node/title "${normalizePageTitle(
+      title
+    )}"]]`
+  )?.[0]?.[0] as string) || '';
+
+function toRoamDate(d: Date) {
+  return isNaN(d.valueOf()) ? '' : format(d, 'MMMM do, yyyy');
+}
+
+export function toRoamDateUid(d: Date) {
+  return isNaN(d.valueOf()) ? '' : format(d, 'MM-dd-yyyy');
+}
+
+const getCurrentPageUid = (): string =>
+  window.location.hash.match(/\/page\/(.*)$/)?.[1] ||
+  getPageUidByPageTitle(toRoamDate(new Date()));
+
+function getUidsFromId(id: string) {
+  const blockUid = id.substring(id.length - 9, id.length);
+  const restOfHTMLId = id.substring(0, id.length - 9);
+  const potentialDateUid = restOfHTMLId.substring(
+    restOfHTMLId.length - 11,
+    restOfHTMLId.length - 1
+  );
+  const parentUid = isNaN(new Date(potentialDateUid).valueOf())
+    ? potentialDateUid.substring(1)
+    : potentialDateUid;
+  return {
+    blockUid,
+    parentUid,
+  };
+}
+
+export function getUids(block: HTMLDivElement | HTMLTextAreaElement) {
+  return block ? getUidsFromId(block.id) : { blockUid: '', parentUid: '' };
+}
+
+async function convertBlockToPage(blockUid: string): Promise<void> {
+  const block: RoamQPullBlock = await window.roamAlphaAPI.q(
+    `[:find (pull ?e [:block/string :block/children :block/order :block/uid {:block/_refs 2} {:block/children 2}]) :in $ ?uid :where [?e :block/uid ?uid]]`,
     blockUid
   )?.[0]?.[0];
   const blockStr = block.string;
   const newPageUid = window.roamAlphaAPI.util.generateUID();
-  window.roamAlphaAPI.data.page.create({
+  await window.roamAlphaAPI.data.page.create({
     page: {
       title: blockStr,
       uid: newPageUid,
     },
   });
 
-  // Loop over children and move to new page.
-  block.children.forEach((c) => {
-    const childUid = c.uid;
-    const blockOrder = c.order;
-    console.log(c);
-    window.roamAlphaAPI.data.block.move({
-      location: {
-        'parent-uid': newPageUid,
-        order: blockOrder,
-      },
+  if (block?.children) {
+    // Loop over children and move to new page.
+    for (const c of block?.children) {
+      const childUid = c.uid;
+      const blockOrder = c.order;
+      console.log(c);
+      await window.roamAlphaAPI.data.block.move({
+        location: {
+          'parent-uid': newPageUid,
+          order: blockOrder,
+        },
+        block: {
+          uid: childUid,
+        },
+      });
+    }
+  }
+
+  // @ts-ignore
+  const backlinks: RoamQPullBlock[] = block['_refs'];
+  for (const link of backlinks) {
+    const newStr = link.string.replaceAll(
+      `((${block.uid}))`,
+      `[[${block.string}]]`
+    );
+    await window.roamAlphaAPI.data.block.update({
       block: {
-        uid: childUid,
+        uid: link.uid,
+        string: newStr,
       },
     });
-  });
+  }
 
-  window.roamAlphaAPI.data.block.update({
+  await window.roamAlphaAPI.data.block.update({
     block: {
       uid: blockUid,
       string: `[[${blockStr}]]`,
@@ -39,21 +98,21 @@ function convertBlockToPage(blockUid: string): void {
   });
 }
 
-function convertPageToBlock(pageUid: string) {
+async function convertPageToBlock(pageUid: string): Promise<void> {
   const today = new Date();
   const todayUid = toRoamDateUid(today);
 
-  const page: RoamQPullBlock = window.roamAlphaAPI.q(
-    `[:find (pull ?e [:node/title :block/children :block/order :block/uid {:block/children 2}]) :in $ ?uid :where [?e :block/uid ?uid]]`,
+  const page: RoamQPullBlock = await window.roamAlphaAPI.q(
+    `[:find (pull ?e [:node/title :block/string :block/children :block/order :block/uid {:block/_refs 2} {:block/children 2}]) :in $ ?uid :where [?e :block/uid ?uid]]`,
     pageUid
   )?.[0]?.[0];
 
   const pageTitle = page.title;
   const newBlockUid = window.roamAlphaAPI.util.generateUID();
-  window.roamAlphaAPI.data.block.create({
+  await window.roamAlphaAPI.data.block.create({
     location: {
       'parent-uid': todayUid,
-      order: 0,
+      order: -1,
     },
     block: {
       uid: newBlockUid,
@@ -61,21 +120,39 @@ function convertPageToBlock(pageUid: string) {
     },
   });
 
-  page.children.forEach((c) => {
-    const childUid = c.uid;
-    const blockOrder = c.order;
-    window.roamAlphaAPI.data.block.move({
-      location: {
-        'parent-uid': newBlockUid,
-        order: blockOrder,
-      },
+  if (page?.children) {
+    for (const c of page.children) {
+      const childUid = c.uid;
+      const blockOrder = c.order;
+      await window.roamAlphaAPI.data.block.move({
+        location: {
+          'parent-uid': newBlockUid,
+          order: blockOrder,
+        },
+        block: {
+          uid: childUid,
+        },
+      });
+    }
+  }
+
+  // @ts-ignore
+  const backlinks: RoamQPullBlock[] = page['_refs'];
+  for (const link of backlinks) {
+    const newStr = link.string.replaceAll(
+      `[[${page.title}]]`,
+      `((${newBlockUid}))`
+    );
+
+    await window.roamAlphaAPI.data.block.update({
       block: {
-        uid: childUid,
+        uid: link.uid,
+        string: newStr,
       },
     });
-  });
+  }
 
-  window.roamAlphaAPI.data.page.delete({
+  await window.roamAlphaAPI.data.page.delete({
     page: {
       uid: pageUid,
     },

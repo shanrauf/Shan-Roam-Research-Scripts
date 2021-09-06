@@ -1,4 +1,4 @@
-import { getUids } from 'roam-client';
+import { getUids } from './convert-block-page';
 import { roam42KeyboardLib } from './keyboard';
 
 // Global state
@@ -117,22 +117,20 @@ function onSendBlock(sendType: SendType): void {
   const sendToUid = blockPath[blockPath.length - 1].value;
 
   if (sendType === 'raw') {
-    console.log('HERE');
     window.roamAlphaAPI.data.block.move({
       location: {
         'parent-uid': sendToUid,
-        order: 0,
+        order: -1,
       },
       block: {
         uid: currentBlockUid,
       },
     });
   } else if (sendType === 'ref') {
-    console.log('HERE2');
     window.roamAlphaAPI.data.block.create({
       location: {
         'parent-uid': sendToUid,
-        order: 0,
+        order: -1,
       },
       block: {
         uid: window.roamAlphaAPI.util.generateUID(),

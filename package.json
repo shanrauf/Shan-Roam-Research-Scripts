@@ -33,7 +33,7 @@
     "typescript": "^4.3.4"
   },
   "dependencies": {
-    "mobile-device-detect": "^0.4.3",
-    "roam-client": "^1.78.0"
+    "date-fns": "^2.16.1",
+    "roam-research-js": "^0.1.1"
   }
 }
