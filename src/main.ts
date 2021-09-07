@@ -2,10 +2,7 @@ import { RoamQPullBlock } from './types';
 import { setupSendBlock } from './send-block';
 import { setupConvertBlockPage, toRoamDateUid } from './convert-block-page';
 import { test } from 'roam-research-js';
-
-const getGraph = (): string =>
-  /^#\/app\/([^/]*?)(?:\/page\/.{9,10})?$/.exec(window.location.hash)?.[1] ||
-  '';
+import { setupGraph } from './test-graph';
 
 const extensionId = 'roam-personal-scripts';
 
@@ -301,4 +298,5 @@ console.log('Initializing keyboard shortcuts');
 setupKeyboardShortcuts();
 setupSendBlock();
 setupConvertBlockPage();
+setupGraph();
 console.log(`Initialized ${extensionId}`);
