@@ -3,6 +3,7 @@ import { setupSendBlock } from './send-block';
 import { setupConvertBlockPage, toRoamDateUid } from './convert-block-page';
 import { test } from 'roam-research-js';
 import { setupGraph } from './test-graph';
+import { attributeValues, blockAndItsAttributes } from './query/query-via-attr';
 
 const extensionId = 'roam-personal-scripts';
 

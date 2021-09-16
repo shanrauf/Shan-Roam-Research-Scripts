@@ -970,6 +970,11 @@ resolve@^1.10.0, resolve@^1.17.0, resolve@^1.19.0:
     is-core-module "^2.2.0"
     path-parse "^1.0.6"
 
+roam-research-js@^0.1.1:
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/roam-research-js/-/roam-research-js-0.1.1.tgz#8bee1d1b68f4f5f818a62c506ae00918afc45ec4"
+  integrity sha512-AeCkhEFUnyapr5ovN521C6pwTnfnFgt7j0+2k9D/WWms88QQExJmmY9dfnXtnkLlS5ZoKdICzIRNHz1OXFqNFw==
+
 rollup-plugin-node-globals@^1.4.0:
   version "1.4.0"
   resolved "https://registry.yarnpkg.com/rollup-plugin-node-globals/-/rollup-plugin-node-globals-1.4.0.tgz#5e1f24a9bb97c0ef51249f625e16c7e61b7c020b"
