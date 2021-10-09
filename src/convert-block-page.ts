@@ -77,17 +77,19 @@ async function convertBlockToPage(blockUid: string): Promise<void> {
 
   // @ts-ignore
   const backlinks: RoamQPullBlock[] = block['_refs'];
-  for (const link of backlinks) {
-    const newStr = link.string.replaceAll(
-      `((${block.uid}))`,
-      `[[${block.string}]]`
-    );
-    await window.roamAlphaAPI.data.block.update({
-      block: {
-        uid: link.uid,
-        string: newStr,
-      },
-    });
+  if (backlinks?.length) {
+    for (const link of backlinks) {
+      const newStr = link.string.replaceAll(
+        `((${block.uid}))`,
+        `[[${block.string}]]`
+      );
+      await window.roamAlphaAPI.data.block.update({
+        block: {
+          uid: link.uid,
+          string: newStr,
+        },
+      });
+    }
   }
 
   await window.roamAlphaAPI.data.block.update({
@@ -138,18 +140,20 @@ async function convertPageToBlock(pageUid: string): Promise<void> {
 
   // @ts-ignore
   const backlinks: RoamQPullBlock[] = page['_refs'];
-  for (const link of backlinks) {
-    const newStr = link.string.replaceAll(
-      `[[${page.title}]]`,
-      `((${newBlockUid}))`
-    );
+  if (backlinks?.length) {
+    for (const link of backlinks) {
+      const newStr = link.string.replaceAll(
+        `[[${page.title}]]`,
+        `((${newBlockUid}))`
+      );
 
-    await window.roamAlphaAPI.data.block.update({
-      block: {
-        uid: link.uid,
-        string: newStr,
-      },
-    });
+      await window.roamAlphaAPI.data.block.update({
+        block: {
+          uid: link.uid,
+          string: newStr,
+        },
+      });
+    }
   }
 
   await window.roamAlphaAPI.data.page.delete({
