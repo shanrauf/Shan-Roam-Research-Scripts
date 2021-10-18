@@ -173,6 +173,7 @@ export function setupConvertBlockPage(): void {
   // Setup keyboard shortcuts for both
   document.addEventListener('keydown', (e) => {
     if (e.ctrlKey && e.shiftKey && e.code === 'KeyB') {
+      e.preventDefault();
       const currentlyEditingBlock = document.querySelector(
         'textarea.rm-block-input'
       ) as HTMLTextAreaElement;

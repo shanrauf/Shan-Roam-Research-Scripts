@@ -3,12 +3,15 @@ import { setupSendBlock } from './send-block';
 import { setupConvertBlockPage, toRoamDateUid } from './convert-block-page';
 import { test } from 'roam-research-js';
 import { setupGraph } from './test-graph';
-import { attributeValues, blockAndItsAttributes } from './query/query-via-attr';
+import format from 'date-fns/format';
 
 const extensionId = 'roam-personal-scripts';
 
 const archivedNotes = 'Archived Notes';
 const archivedNotesAttribute = `${archivedNotes}::`;
+
+const toRoamDate = (d: Date) =>
+  isNaN(d.valueOf()) ? '' : format(d, 'MMMM do, yyyy');
 
 async function getOrCreateArchivedNotesAttribute(): Promise<string> {
   const todayDate = new Date();
@@ -26,6 +29,21 @@ async function getOrCreateArchivedNotesAttribute(): Promise<string> {
   )?.[0]?.[0];
 
   if (!archivedNotesAttributeUid) {
+    const dnpPageExists = await window.roamAlphaAPI.q(`
+    [:find ?e :where [?e :block/uid "10-10-21"]]
+    `)?.[0]?.[0];
+
+    if (!dnpPageExists) {
+      const todayDateTitle = toRoamDate(todayDate);
+      console.log(todayDateTitle);
+      await window.roamAlphaAPI.data.page.create({
+        page: {
+          uid: todayUid,
+          title: todayDateTitle,
+        },
+      });
+    }
+
     archivedNotesAttributeUid = window.roamAlphaAPI.util.generateUID();
     await window.roamAlphaAPI.data.block.create({
       location: {
@@ -34,6 +52,12 @@ async function getOrCreateArchivedNotesAttribute(): Promise<string> {
       },
       block: {
         string: archivedNotesAttribute,
+        uid: archivedNotesAttributeUid,
+        open: false,
+      },
+    });
+    await window.roamAlphaAPI.data.block.update({
+      block: {
         uid: archivedNotesAttributeUid,
         open: false,
       },
