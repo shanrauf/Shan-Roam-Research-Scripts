@@ -46,7 +46,6 @@ function getUidFromBlockString(text: string, path: BlockPath): string {
   }
   const parentBlockItem = path[path.length - 1];
   const parentUid = resolveParentUid(parentBlockItem, path);
-  console.log({ parentBlockItem, parentUid, text, path });
   const uid = window.roamAlphaAPI.q(
     `[:find ?uid :in $ ?str ?parent-uid :where [?e :block/uid ?parent-uid] [?e :block/children ?c] [?c :block/string ?str] [?c :block/uid ?uid]]`,
     text,
@@ -61,17 +60,11 @@ function addElToBlockPath(selectedEl: Element, path: BlockPath): void {
     const nestedSelectedBlock = selectedEl.querySelector('.bp3-overflow-list');
     const isNestedSelectedBlock =
       nestedSelectedBlock?.querySelector('.rm-zoom-item');
-    console.log({
-      isCreatingNewItem,
-      nestedSelectedBlock,
-      isNestedSelectedBlock,
-    });
     if (isCreatingNewItem) {
       const el = selectedEl.querySelector('div');
       const itemText = el.childNodes.item(el.childNodes.length - 1).textContent;
       const isNewBlock = path.length;
       const blockType = isNewBlock ? 'block-string' : 'page-title';
-      console.log({ itemText, isNewBlock, blockType });
       addToBlockPath({ type: blockType, value: itemText }, path);
     } else if (isNestedSelectedBlock) {
       const el = selectedEl.querySelector('div');
@@ -107,7 +100,6 @@ function addElToBlockPath(selectedEl: Element, path: BlockPath): void {
     );
     const orderNumber = blockPathItemEls.indexOf(selectedEl.parentElement);
     path = path.slice(0, orderNumber + 1);
-    console.log({ orderNumber, path });
   }
 }
 
@@ -151,14 +143,11 @@ export function setupSendBlock(): void {
       ) as HTMLTextAreaElement;
       currentBlockUid = getUids(currentlyEditingBlock)?.blockUid;
 
-      console.log({ currentBlockUid });
-
       setTimeout(() => {
         const blockSearchEl = document.querySelector('.rm-modal-dialog');
         blockSearchEl.addEventListener('click', (e) => {
           const selectedEl = e.target as Element;
           addElToBlockPath(selectedEl, blockPath);
-          console.log({ blockPath });
         });
       }, 500);
     } else if (e.code === 'Backspace') {

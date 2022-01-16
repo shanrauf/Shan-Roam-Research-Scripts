@@ -7,7 +7,7 @@
     "build": "cross-env ROLLUP_WATCH=false rollup -c",
     "watch": "cross-env ROLLUP_WATCH=true rollup -c -w",
     "start": "cross-env ROLLUP_WATCH=true npm-run-all --parallel serve watch",
-    "serve": "serve"
+    "serve": "serve --cors"
   },
   "repository": {
     "type": "git",

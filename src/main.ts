@@ -1,5 +1,5 @@
 import { RoamQPullBlock } from './types';
-import { setupSendBlock } from './send-block';
+// import { setupSendBlock } from './send-block';
 import { setupConvertBlockPage, toRoamDateUid } from './convert-block-page';
 import { test } from 'roam-research-js';
 import { setupGraph } from './test-graph';
@@ -321,7 +321,7 @@ function setupKeyboardShortcuts(): void {
 
 console.log('Initializing keyboard shortcuts');
 setupKeyboardShortcuts();
-setupSendBlock();
+// setupSendBlock();
 setupConvertBlockPage();
 setupGraph();
 console.log(`Initialized ${extensionId}`);
