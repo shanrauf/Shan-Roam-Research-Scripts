@@ -44,25 +44,32 @@ export function getUids(block: HTMLDivElement | HTMLTextAreaElement) {
 }
 
 async function convertBlockToPage(blockUid: string): Promise<void> {
-  const block: RoamQPullBlock = await window.roamAlphaAPI.q(
-    `[:find (pull ?e [:block/string :block/children :block/order :block/uid {:block/_refs 2} {:block/children 2}]) :in $ ?uid :where [?e :block/uid ?uid]]`,
-    blockUid
-  )?.[0]?.[0];
-  const blockStr = block.string;
-  const newPageUid = window.roamAlphaAPI.util.generateUID();
-  await window.roamAlphaAPI.data.page.create({
-    page: {
-      title: blockStr,
-      uid: newPageUid,
+  // Quickly minimize the block to hide the conversion
+  window.roamAlphaAPI.data.block.update({
+    block: {
+      uid: blockUid,
+      open: false,
     },
   });
+
+  // Create the page and update the block like this so it looks instant
+  await window.roamAlphaAPI.data.block.update({
+    block: {
+      uid: blockUid,
+      string: `[[${blockStr}]]`,
+    },
+  });
+
+  // Now find that page's UID
+  const newPageUid = await window.roamAlphaAPI.q(
+    `[:find ?uid :where [?e :node/title "${blockStr}"] [?e :block/uid ?uid]]`
+  )[0][0];
 
   if (block?.children) {
     // Loop over children and move to new page.
     for (const c of block?.children) {
       const childUid = c.uid;
       const blockOrder = c.order;
-      console.log(c);
       await window.roamAlphaAPI.data.block.move({
         location: {
           'parent-uid': newPageUid,
@@ -91,13 +98,6 @@ async function convertBlockToPage(blockUid: string): Promise<void> {
       });
     }
   }
-
-  await window.roamAlphaAPI.data.block.update({
-    block: {
-      uid: blockUid,
-      string: `[[${blockStr}]]`,
-    },
-  });
 }
 
 async function convertPageToBlock(pageUid: string): Promise<void> {
@@ -174,10 +174,8 @@ export function setupConvertBlockPage(): void {
   document.addEventListener('keydown', (e) => {
     if (e.ctrlKey && e.shiftKey && e.code === 'KeyB') {
       e.preventDefault();
-      const currentlyEditingBlock = document.querySelector(
-        'textarea.rm-block-input'
-      ) as HTMLTextAreaElement;
-      const currentBlockUid = getUids(currentlyEditingBlock)?.blockUid;
+      const currentBlockUid =
+        window.roamAlphaAPI.ui.getFocusedBlock()?.['block-uid'];
       convertBlockToPage(currentBlockUid);
     } else if (e.ctrlKey && e.shiftKey && e.code === 'KeyQ') {
       let pageUid = '';
