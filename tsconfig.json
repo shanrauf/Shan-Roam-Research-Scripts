@@ -10,7 +10,6 @@
     "moduleResolution": "node",
     "typeRoots": [
       "./node_modules/@types"
-      // "./node_modules/roam-research-js" TODO
   ]
   }
 }

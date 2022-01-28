@@ -1,9 +1,5 @@
-import format from 'date-fns/format';
+import { toRoamDateUid, findOrCreateCurrentDNPUid } from './util';
 import { RoamQPullBlock } from './types';
-
-export function toRoamDateUid(d: Date) {
-  return isNaN(d.valueOf()) ? '' : format(d, 'MM-dd-yyyy');
-}
 
 function getUidsFromId(id: string) {
   const blockUid = id.substring(id.length - 9, id.length);
