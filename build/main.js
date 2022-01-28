@@ -2481,6 +2481,38 @@
     function toRoamDateUid(d) {
         return isNaN(d.valueOf()) ? '' : format(d, 'MM-dd-yyyy');
     }
+    var toRoamDate = function (d) {
+        return isNaN(d.valueOf()) ? '' : format(d, 'MMMM do, yyyy');
+    };
+    function findOrCreateCurrentDNPUid() {
+        var _a, _b;
+        return __awaiter(this, void 0, void 0, function () {
+            var todayDate, todayUid, dnpPageExists, todayDateTitle;
+            return __generator(this, function (_c) {
+                switch (_c.label) {
+                    case 0:
+                        todayDate = new Date();
+                        todayUid = toRoamDateUid(todayDate);
+                        return [4 /*yield*/, ((_b = (_a = window.roamAlphaAPI.q("\n  [:find ?e :where [?e :block/uid \"10-10-21\"]]\n  ")) === null || _a === void 0 ? void 0 : _a[0]) === null || _b === void 0 ? void 0 : _b[0])];
+                    case 1:
+                        dnpPageExists = _c.sent();
+                        if (!!dnpPageExists) return [3 /*break*/, 3];
+                        todayDateTitle = toRoamDate(todayDate);
+                        return [4 /*yield*/, window.roamAlphaAPI.data.page.create({
+                                page: {
+                                    uid: todayUid,
+                                    title: todayDateTitle,
+                                },
+                            })];
+                    case 2:
+                        _c.sent();
+                        _c.label = 3;
+                    case 3: return [2 /*return*/, todayUid];
+                }
+            });
+        });
+    }
+
     function convertBlockToPage(blockUid) {
         var _a, _b;
         return __awaiter(this, void 0, void 0, function () {
@@ -2712,40 +2744,8 @@
         });
     }
 
-    var extensionId = 'shan-personal-scripts';
     var archivedNotes = 'Archived Notes';
     var archivedNotesAttribute = "".concat(archivedNotes, "::");
-    var toRoamDate = function (d) {
-        return isNaN(d.valueOf()) ? '' : format(d, 'MMMM do, yyyy');
-    };
-    function findOrCreateCurrentDNPUid() {
-        var _a, _b;
-        return __awaiter(this, void 0, void 0, function () {
-            var todayDate, todayUid, dnpPageExists, todayDateTitle;
-            return __generator(this, function (_c) {
-                switch (_c.label) {
-                    case 0:
-                        todayDate = new Date();
-                        todayUid = toRoamDateUid(todayDate);
-                        return [4 /*yield*/, ((_b = (_a = window.roamAlphaAPI.q("\n  [:find ?e :where [?e :block/uid \"10-10-21\"]]\n  ")) === null || _a === void 0 ? void 0 : _a[0]) === null || _b === void 0 ? void 0 : _b[0])];
-                    case 1:
-                        dnpPageExists = _c.sent();
-                        if (!!dnpPageExists) return [3 /*break*/, 3];
-                        todayDateTitle = toRoamDate(todayDate);
-                        return [4 /*yield*/, window.roamAlphaAPI.data.page.create({
-                                page: {
-                                    uid: todayUid,
-                                    title: todayDateTitle,
-                                },
-                            })];
-                    case 2:
-                        _c.sent();
-                        _c.label = 3;
-                    case 3: return [2 /*return*/, todayUid];
-                }
-            });
-        });
-    }
     function getOrCreateArchivedNotesAttribute() {
         var _a, _b;
         return __awaiter(this, void 0, void 0, function () {
@@ -2840,6 +2840,7 @@
             });
         });
     }
+
     function refactorBlock(_, oldBlockUid) {
         return __awaiter(this, void 0, void 0, function () {
             var newBlockUid, _a, parentBlockUid, oldBlockOrder, notesBlock;
@@ -2912,6 +2913,8 @@
             });
         });
     }
+
+    var extensionId = 'shan-personal-scripts';
     function getAllSiblings(el) {
         // modified from https://stackoverflow.com/questions/4378784/how-to-find-all-siblings-of-the-currently-selected-dom-object
         var siblings = [];
@@ -2975,31 +2978,18 @@
             });
         });
     }
-    function setupKeyboardShortcuts() {
-        var _this = this;
-        setupConvertBlockPage();
-        document.addEventListener('keydown', function (e) { return __awaiter(_this, void 0, void 0, function () {
-            var todayUid, blockUid_1, order, _a, _b, windowId;
-            var _c, _d;
-            return __generator(this, function (_e) {
-                switch (_e.label) {
-                    case 0:
-                        if (!(e.ctrlKey && e.shiftKey && e.code === 'Backspace')) return [3 /*break*/, 1];
-                        onShortcut(archiveBlock);
-                        return [3 /*break*/, 13];
+    function createDNPBlockAndFocus(ctrlSelected) {
+        return __awaiter(this, void 0, void 0, function () {
+            var todayUid, blockUid, order, windowId;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, findOrCreateCurrentDNPUid()];
                     case 1:
-                        if (!(e.ctrlKey && e.shiftKey && e.code === 'KeyX')) return [3 /*break*/, 2];
-                        onShortcut(refactorBlock);
-                        return [3 /*break*/, 13];
-                    case 2:
-                        if (!(e.altKey && e.code === 'KeyB')) return [3 /*break*/, 13];
-                        return [4 /*yield*/, findOrCreateCurrentDNPUid()];
-                    case 3:
-                        todayUid = _e.sent();
+                        todayUid = _a.sent();
                         return [4 /*yield*/, window.roamAlphaAPI.util.generateUID()];
-                    case 4:
-                        blockUid_1 = _e.sent();
-                        order = window.roamAlphaAPI.q("\n      [:find [?c ...] :where [?e :block/uid \"".concat(todayUid, "\"] [??e :block/children ?c]]")).length;
+                    case 2:
+                        blockUid = _a.sent();
+                        order = window.roamAlphaAPI.q("\n [:find [?c ...] :where [?e :block/uid \"".concat(todayUid, "\"] [??e :block/children ?c]]")).length;
                         return [4 /*yield*/, window.roamAlphaAPI.data.block.create({
                                 location: {
                                     'parent-uid': todayUid,
@@ -3007,56 +2997,112 @@
                                 },
                                 block: {
                                     string: '',
-                                    uid: blockUid_1,
+                                    uid: blockUid,
                                 },
                             })];
-                    case 5:
-                        _e.sent();
-                        if (!e.ctrlKey) return [3 /*break*/, 10];
-                        _b = (_a = window.roamAlphaAPI.ui.rightSidebar).addWindow;
-                        _c = {};
-                        _d = {
-                            type: 'block',
-                            'block-uid': blockUid_1
-                        };
-                        return [4 /*yield*/, window.roamAlphaAPI.ui.rightSidebar.getWindows()
-                                .length];
-                    case 6: return [4 /*yield*/, _b.apply(_a, [(_c.window = (_d.order = _e.sent(),
-                                _d),
-                                _c)])];
-                    case 7:
-                        _e.sent();
+                    case 3:
+                        _a.sent();
+                        if (!ctrlSelected) return [3 /*break*/, 7];
+                        return [4 /*yield*/, window.roamAlphaAPI.ui.rightSidebar.addWindow({
+                                window: {
+                                    type: 'block',
+                                    'block-uid': blockUid,
+                                    order: window.roamAlphaAPI.ui.rightSidebar.getWindows().length,
+                                },
+                            })];
+                    case 4:
+                        _a.sent();
                         return [4 /*yield*/, window.roamAlphaAPI.ui.rightSidebar
                                 .getWindows()
-                                .filter(function (w) { return w['block-uid'] === blockUid_1; })[0]['window-id']];
-                    case 8:
-                        windowId = _e.sent();
+                                .filter(function (w) { return w['block-uid'] === blockUid; })[0]['window-id']];
+                    case 5:
+                        windowId = _a.sent();
                         return [4 /*yield*/, window.roamAlphaAPI.ui.setBlockFocusAndSelection({
                                 location: {
                                     'window-id': windowId,
-                                    'block-uid': blockUid_1,
+                                    'block-uid': blockUid,
                                 },
                             })];
-                    case 9:
-                        _e.sent();
-                        return [3 /*break*/, 13];
-                    case 10: return [4 /*yield*/, window.roamAlphaAPI.ui.mainWindow.openBlock({
+                    case 6:
+                        _a.sent();
+                        return [3 /*break*/, 10];
+                    case 7: return [4 /*yield*/, window.roamAlphaAPI.ui.mainWindow.openBlock({
                             block: {
-                                uid: blockUid_1,
+                                uid: blockUid,
                             },
                         })];
-                    case 11:
-                        _e.sent();
+                    case 8:
+                        _a.sent();
                         return [4 /*yield*/, window.roamAlphaAPI.ui.setBlockFocusAndSelection({
                                 location: {
-                                    'block-uid': blockUid_1,
+                                    'block-uid': blockUid,
                                     'window-id': 'main-window',
                                 },
                             })];
-                    case 12:
-                        _e.sent();
-                        _e.label = 13;
-                    case 13: return [2 /*return*/];
+                    case 9:
+                        _a.sent();
+                        _a.label = 10;
+                    case 10: return [2 /*return*/];
+                }
+            });
+        });
+    }
+    function setupKeyboardShortcuts() {
+        var _this = this;
+        setupConvertBlockPage();
+        document.addEventListener('keydown', function (e) { return __awaiter(_this, void 0, void 0, function () {
+            var key, windowOrder, roamWindow, roamWindowId, roamWindowUid;
+            var _a;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0:
+                        key = parseInt(e.key);
+                        console.log(key);
+                        if (!(e.ctrlKey && e.shiftKey && e.code === 'Backspace')) return [3 /*break*/, 1];
+                        onShortcut(archiveBlock);
+                        return [3 /*break*/, 7];
+                    case 1:
+                        if (!(e.ctrlKey && e.shiftKey && e.code === 'KeyX')) return [3 /*break*/, 2];
+                        onShortcut(refactorBlock);
+                        return [3 /*break*/, 7];
+                    case 2:
+                        if (!(e.altKey && e.code === 'KeyB')) return [3 /*break*/, 4];
+                        return [4 /*yield*/, createDNPBlockAndFocus(e.ctrlKey)];
+                    case 3:
+                        _b.sent();
+                        return [3 /*break*/, 7];
+                    case 4:
+                        if (!(e.altKey && key >= 0 && key <= 9)) return [3 /*break*/, 7];
+                        if (!(key === 1)) return [3 /*break*/, 6];
+                        return [4 /*yield*/, window.roamAlphaAPI.ui.setBlockFocusAndSelection({
+                                location: {
+                                    'block-uid': window.roamAlphaAPI.ui.mainWindow.getOpenPageOrBlockUid(),
+                                    'window-id': 'main-window',
+                                },
+                            })];
+                    case 5:
+                        _b.sent();
+                        return [2 /*return*/];
+                    case 6:
+                        windowOrder = e.key === '0'
+                            ? window.roamAlphaAPI.ui.rightSidebar.getWindows().length - 1
+                            : key - 1;
+                        console.log(windowOrder);
+                        roamWindow = (_a = window.roamAlphaAPI.ui.rightSidebar.getWindows()) === null || _a === void 0 ? void 0 : _a[windowOrder];
+                        console.log(roamWindow);
+                        if (roamWindow.type === 'graph' || roamWindow.type == 'mentions')
+                            return [2 /*return*/];
+                        roamWindowId = roamWindow['window-id'];
+                        console.log('ASDF');
+                        roamWindowUid = (roamWindow === null || roamWindow === void 0 ? void 0 : roamWindow['page-uid']) || (roamWindow === null || roamWindow === void 0 ? void 0 : roamWindow['block-uid']);
+                        window.roamAlphaAPI.ui.setBlockFocusAndSelection({
+                            location: {
+                                'block-uid': roamWindowUid,
+                                'window-id': roamWindowId,
+                            },
+                        });
+                        _b.label = 7;
+                    case 7: return [2 /*return*/];
                 }
             });
         }); });
