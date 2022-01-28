@@ -269,10 +269,25 @@ function setupKeyboardShortcuts(): void {
               .length,
           },
         });
+        const windowId = await window.roamAlphaAPI.ui.rightSidebar
+          .getWindows()
+          .filter((w: any) => w['block-uid'] === blockUid)[0]['window-id'];
+        await window.roamAlphaAPI.ui.setBlockFocusAndSelection({
+          location: {
+            'window-id': windowId,
+            'block-uid': blockUid,
+          },
+        });
       } else {
         await window.roamAlphaAPI.ui.mainWindow.openBlock({
           block: {
             uid: blockUid,
+          },
+        });
+        await window.roamAlphaAPI.ui.setBlockFocusAndSelection({
+          location: {
+            'block-uid': blockUid,
+            'window-id': '',
           },
         });
       }
