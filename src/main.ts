@@ -12,9 +12,30 @@ const archivedNotesAttribute = `${archivedNotes}::`;
 const toRoamDate = (d: Date) =>
   isNaN(d.valueOf()) ? '' : format(d, 'MMMM do, yyyy');
 
-async function getOrCreateArchivedNotesAttribute(): Promise<string> {
+async function findOrCreateCurrentDNPUid(): Promise<string> {
   const todayDate = new Date();
   const todayUid = toRoamDateUid(todayDate);
+
+  // Find or create the DNP page
+  const dnpPageExists = await window.roamAlphaAPI.q(`
+  [:find ?e :where [?e :block/uid "10-10-21"]]
+  `)?.[0]?.[0];
+
+  if (!dnpPageExists) {
+    const todayDateTitle = toRoamDate(todayDate);
+    await window.roamAlphaAPI.data.page.create({
+      page: {
+        uid: todayUid,
+        title: todayDateTitle,
+      },
+    });
+  }
+
+  return todayUid;
+}
+
+async function getOrCreateArchivedNotesAttribute(): Promise<string> {
+  const todayUid = await findOrCreateCurrentDNPUid();
 
   // Get or create Archived Notes attribute on the page
   let archivedNotesAttributeUid = await window.roamAlphaAPI.q(
@@ -28,21 +49,6 @@ async function getOrCreateArchivedNotesAttribute(): Promise<string> {
   )?.[0]?.[0];
 
   if (!archivedNotesAttributeUid) {
-    // Find or create the DNP page
-    const dnpPageExists = await window.roamAlphaAPI.q(`
-    [:find ?e :where [?e :block/uid "10-10-21"]]
-    `)?.[0]?.[0];
-
-    if (!dnpPageExists) {
-      const todayDateTitle = toRoamDate(todayDate);
-      await window.roamAlphaAPI.data.page.create({
-        page: {
-          uid: todayUid,
-          title: todayDateTitle,
-        },
-      });
-    }
-
     // Adding the Archived Notes attribute
     archivedNotesAttributeUid = window.roamAlphaAPI.util.generateUID();
     await window.roamAlphaAPI.data.block.create({
@@ -88,7 +94,7 @@ async function archiveBlock(_: string, uidToArchive: string): Promise<void> {
     await window.roamAlphaAPI.data.block.create({
       location: {
         'parent-uid': archivedNotesAttributeUid,
-        order: -1,
+        order: 0,
       },
       block: {
         uid: parentBlockInArchivedNotesUid,
@@ -230,17 +236,50 @@ async function onShortcut(
 }
 
 function setupKeyboardShortcuts(): void {
-  document.addEventListener('keydown', (e) => {
+  setupConvertBlockPage();
+  document.addEventListener('keydown', async (e) => {
     if (e.ctrlKey && e.shiftKey && e.code === 'Backspace') {
       onShortcut(archiveBlock);
     } else if (e.ctrlKey && e.shiftKey && e.code === 'KeyX') {
       onShortcut(refactorBlock);
+    } else if (e.altKey && e.code === 'KeyB') {
+      // Create a block at the bottom of DNP and focus on it (like a quick capture command)
+      const todayUid = await findOrCreateCurrentDNPUid();
+      const blockUid = await window.roamAlphaAPI.util.generateUID();
+      const order = window.roamAlphaAPI.q(`
+      [:find [?c ...] :where [?e :block/uid "${todayUid}"] [??e :block/children ?c]]`).length;
+
+      await window.roamAlphaAPI.data.block.create({
+        location: {
+          'parent-uid': todayUid,
+          order: order,
+        },
+        block: {
+          string: '',
+          uid: blockUid,
+        },
+      });
+
+      if (e.ctrlKey) {
+        await window.roamAlphaAPI.ui.rightSidebar.addWindow({
+          window: {
+            type: 'block',
+            'block-uid': blockUid,
+            order: await window.roamAlphaAPI.ui.rightSidebar.getWindows()
+              .length,
+          },
+        });
+      } else {
+        await window.roamAlphaAPI.ui.mainWindow.openBlock({
+          block: {
+            uid: blockUid,
+          },
+        });
+      }
     }
   });
 }
 
 console.log('Initializing keyboard shortcuts');
 setupKeyboardShortcuts();
-// setupSendBlock();
-setupConvertBlockPage();
 console.log(`Initialized ${extensionId}`);

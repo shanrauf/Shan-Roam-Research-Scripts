@@ -7,7 +7,7 @@
     "build": "cross-env NODE_ENV=production rollup -c",
     "watch": "cross-env NODE_ENV=development rollup -c -w",
     "start": "cross-env NODE_ENV=development npm-run-all --parallel serve watch",
-    "serve": "serve --cors"
+    "serve": "serve --cors -l 5000"
   },
   "repository": {
     "type": "git",

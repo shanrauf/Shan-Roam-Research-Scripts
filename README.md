@@ -34,3 +34,5 @@ if (!existing) {
 
 Converts the page you're cursor is focused in (so if you're focused on a page title or a block on a page, it'll convert that page) - otherwise it converts the page in the main view (btw you can't convert the daily notes page)
 ![Convert a page to a block](public/readme/page-to-block.gif)
+
+### Create a block on DNP and focus on it in main (or sidebar) view: `(Ctrl) + Alt + B (subject to change)`
