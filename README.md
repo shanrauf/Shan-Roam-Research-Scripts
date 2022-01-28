@@ -2,10 +2,18 @@
 
 ## Commands
 
-- Archive block: `Ctrl + Shift + Delete`
-- Refactor block: `Ctrl + Shift + X`
-- Convert a block to a page: `Ctrl + Shift + W`
-- Convert a page to a block: `Ctrl + Shift + Q`
+### Archive block: `Ctrl + Shift + Delete`
+
+### Refactor block: `Ctrl + Shift + X`
+
+### Convert a block to a page: `Ctrl + Shift + W`
+
+![Convert a block to a page](public/readme/block-to-page.gif)
+
+### Convert a page to a block: `Ctrl + Shift + Q`
+
+Converts the page you're cursor is focused in - otherwise it converts the page in the main view (you can't convert the daily notes page)
+![Convert a page to a block](public/readme/page-to-block.gif)
 
 ## Installation Guide
 

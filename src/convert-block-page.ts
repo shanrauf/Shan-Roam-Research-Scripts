@@ -160,13 +160,13 @@ async function convertPageToBlock(pageUid: string): Promise<void> {
 export async function setupConvertBlockPage(): Promise<void> {
   // Setup keyboard shortcuts for both
   document.addEventListener('keydown', async (e) => {
-    if (e.ctrlKey && e.shiftKey && e.code === 'KeyW') {
+    if (e.ctrlKey && e.altKey && e.code === 'KeyW') {
       e.preventDefault();
       const currentBlockUid = await window.roamAlphaAPI.ui.getFocusedBlock()?.[
         'block-uid'
       ];
       convertBlockToPage(currentBlockUid);
-    } else if (e.ctrlKey && e.shiftKey && e.code === 'KeyQ') {
+    } else if (e.ctrlKey && e.altKey && e.code === 'KeyQ') {
       let pageUid = '';
       const currentBlockUid = await window.roamAlphaAPI.ui.getFocusedBlock()?.[
         'block-uid'
