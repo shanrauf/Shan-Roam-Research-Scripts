@@ -168,10 +168,21 @@ export async function setupConvertBlockPage(): Promise<void> {
       convertBlockToPage(currentBlockUid);
     } else if (e.ctrlKey && e.altKey && e.code === 'KeyQ') {
       let pageUid = '';
+      const editingPageTitleEl = document.getElementsByClassName(
+        'rm-title-editing-display'
+      )?.[0];
+
       const currentBlockUid = await window.roamAlphaAPI.ui.getFocusedBlock()?.[
         'block-uid'
       ];
-      if (currentBlockUid) {
+      if (editingPageTitleEl) {
+        const pageTitle = editingPageTitleEl.firstElementChild.innerHTML;
+        if (!pageTitle) return;
+
+        pageUid = await window.roamAlphaAPI.q(
+          `[:find ?uid :where [?e :node/title "${pageTitle}"] [?e :block/uid ?uid]]`
+        )?.[0]?.[0];
+      } else if (currentBlockUid) {
         pageUid = await window.roamAlphaAPI.q(
           `[:find ?uid :in $ ?block-uid :where [?b :block/uid ?block-uid] [?b :block/page ?p] [?p :block/uid ?uid]]`,
           currentBlockUid
@@ -181,10 +192,7 @@ export async function setupConvertBlockPage(): Promise<void> {
         // const uid = window.roamAlphaAPI.ui.mainWindow.getOpenPageOrBlockUid();
         pageUid =
           await window.roamAlphaAPI.ui.mainWindow.getOpenPageOrBlockUid();
-        console.log(pageUid);
       }
-      console.log('ASDF');
-
       const DAILY_NOTE_UID_REGEX =
         /^(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])\-\d{4}$/;
       if (!pageUid || pageUid.match(DAILY_NOTE_UID_REGEX)?.length) return;
