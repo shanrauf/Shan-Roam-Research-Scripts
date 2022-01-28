@@ -3050,7 +3050,7 @@
                         return [4 /*yield*/, window.roamAlphaAPI.ui.setBlockFocusAndSelection({
                                 location: {
                                     'block-uid': blockUid_1,
-                                    'window-id': '',
+                                    'window-id': 'main-window',
                                 },
                             })];
                     case 12:

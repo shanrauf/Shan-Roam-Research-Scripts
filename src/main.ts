@@ -287,7 +287,7 @@ function setupKeyboardShortcuts(): void {
         await window.roamAlphaAPI.ui.setBlockFocusAndSelection({
           location: {
             'block-uid': blockUid,
-            'window-id': '',
+            'window-id': 'main-window',
           },
         });
       }
