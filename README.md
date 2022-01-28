@@ -4,7 +4,11 @@
 
 ### Archive block: `Ctrl + Shift + Delete`
 
+![Archive block](public/readme/archive-block.gif)
+
 ### Refactor block: `Ctrl + Shift + X`
+
+![Refactor block](public/readme/refactor-block.gif)
 
 ### Convert a block to a page: `Ctrl + Shift + W`
 
@@ -23,7 +27,7 @@ Converts the page you're cursor is focused in - otherwise it converts the page i
 var existing = document.getElementById("roam/js/shan-personal-scripts");
 if (!existing) {
   var extension = document.createElement("script");
-  extension.src = "https://raw.githubusercontent.com/shanrauf/shan-personal-scripts/master/build/main.js";
+  extension.src = "https://pacific-beach-36446.herokuapp.com/main.js";
   extension.id = "roam/js/shan-personal-scripts";
   extension.async = true;
   extension.type = "text/javascript";
