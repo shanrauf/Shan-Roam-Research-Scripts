@@ -1,12 +1,10 @@
 import { RoamQPullBlock } from './types';
 // import { setupSendBlock } from './send-block';
 import { setupConvertBlockPage, toRoamDateUid } from './convert-block-page';
-import { test } from 'roam-research-js';
-import { setupGraph } from './test-graph';
+// import { test } from 'roam-research-js';
 import format from 'date-fns/format';
-import { el } from 'date-fns/locale';
 
-const extensionId = 'roam-personal-scripts';
+const extensionId = 'shan-personal-scripts';
 
 const archivedNotes = 'Archived Notes';
 const archivedNotesAttribute = `${archivedNotes}::`;
@@ -37,7 +35,6 @@ async function getOrCreateArchivedNotesAttribute(): Promise<string> {
 
     if (!dnpPageExists) {
       const todayDateTitle = toRoamDate(todayDate);
-      console.log(todayDateTitle);
       await window.roamAlphaAPI.data.page.create({
         page: {
           uid: todayUid,
@@ -153,7 +150,7 @@ async function refactorBlock(_: string, oldBlockUid: string): Promise<void> {
     block: {
       string: `Notes`,
       uid: notesBlock,
-      open: false
+      open: false,
     },
   });
 
@@ -178,11 +175,11 @@ async function refactorBlock(_: string, oldBlockUid: string): Promise<void> {
 function getAllSiblings(el: Element): Element[] {
   // modified from https://stackoverflow.com/questions/4378784/how-to-find-all-siblings-of-the-currently-selected-dom-object
   const siblings: Element[] = [];
-  el = el.parentNode.firstChild;
+  el = el.parentNode.firstElementChild;
   while (el) {
     if (el.nodeType === 3) continue; // text node
     siblings.push(el);
-    el = el.nextSibling;
+    el = el.nextElementSibling;
   }
   return siblings;
 }
@@ -197,24 +194,28 @@ function getTopLevelSelectedBlockUids(): string[] {
   const oneOfTheTopMostSelectedBlocks = document.getElementsByClassName(
     'block-highlight-blue'
   )?.[0];
-  if !oneOfTheTopMostSelectedBlocks return [];
+  if (!oneOfTheTopMostSelectedBlocks) {
+    return [];
+  }
 
-  const allSelectedSiblings = getAllSiblings(oneOfTheTopMostSelectedBlocks).filter(
+  const allSelectedSiblings = getAllSiblings(
+    oneOfTheTopMostSelectedBlocks
+  ).filter(
     (s) =>
       s.classList.contains('rm-block') &&
       s.classList.contains('block-highlight-blue')
   );
-  return allSelectedSiblings.map(s => getUidFromEl(s));
+  return allSelectedSiblings.map((s) => getUidFromEl(s));
 }
-
 
 async function onShortcut(
   callback: (pageUid: string, blockUid: string) => void
 ): Promise<void> {
   let blockUids: string[] = getTopLevelSelectedBlockUids();
   if (!blockUids.length) {
-    const focusedBlock = window.roamAlphaAPI.ui.getFocusedBlock()?.['block-uid'];
-    if !focusedBlock return;
+    const focusedBlock =
+      window.roamAlphaAPI.ui.getFocusedBlock()?.['block-uid'];
+    if (!focusedBlock) return;
     blockUids = [focusedBlock];
   }
 
@@ -223,10 +224,9 @@ async function onShortcut(
       `[:find ?page-uid :in $ ?block-uid :where [?b :block/uid ?block-uid] [?b :block/page ?p] [?p :block/uid ?page-uid]]`,
       blockUid
     )[0][0];
-  
+
     await callback(pageUid, blockUid);
   }
-
 }
 
 function setupKeyboardShortcuts(): void {

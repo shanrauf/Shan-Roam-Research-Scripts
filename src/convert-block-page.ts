@@ -1,27 +1,9 @@
 import format from 'date-fns/format';
 import { RoamQPullBlock } from './types';
 
-const normalizePageTitle = (title: string) =>
-  title.replace(/\\/, '\\\\').replace(/"/g, '\\"');
-
-const getPageUidByPageTitle = (title: string): string =>
-  (window.roamAlphaAPI.q(
-    `[:find ?u :where [?e :block/uid ?u] [?e :node/title "${normalizePageTitle(
-      title
-    )}"]]`
-  )?.[0]?.[0] as string) || '';
-
-function toRoamDate(d: Date) {
-  return isNaN(d.valueOf()) ? '' : format(d, 'MMMM do, yyyy');
-}
-
 export function toRoamDateUid(d: Date) {
   return isNaN(d.valueOf()) ? '' : format(d, 'MM-dd-yyyy');
 }
-
-const getCurrentPageUid = (): string =>
-  window.location.hash.match(/\/page\/(.*)$/)?.[1] ||
-  getPageUidByPageTitle(toRoamDate(new Date()));
 
 function getUidsFromId(id: string) {
   const blockUid = id.substring(id.length - 9, id.length);
@@ -51,6 +33,12 @@ async function convertBlockToPage(blockUid: string): Promise<void> {
       open: false,
     },
   });
+
+  const block: RoamQPullBlock = await window.roamAlphaAPI.q(
+    `[:find (pull ?e [:block/string :block/children :block/order :block/uid {:block/_refs 2} {:block/children 2}]) :in $ ?uid :where [?e :block/uid ?uid]]`,
+    blockUid
+  )?.[0]?.[0];
+  const blockStr = block.string;
 
   // Create the page and update the block like this so it looks instant
   await window.roamAlphaAPI.data.block.update({
@@ -161,7 +149,7 @@ async function convertPageToBlock(pageUid: string): Promise<void> {
       uid: pageUid,
     },
   });
-  window.roamAlphaAPI.ui.rightSidebar.addWindow({
+  await window.roamAlphaAPI.ui.rightSidebar.addWindow({
     window: {
       type: 'block',
       'block-uid': newBlockUid,
@@ -169,37 +157,33 @@ async function convertPageToBlock(pageUid: string): Promise<void> {
   });
 }
 
-export function setupConvertBlockPage(): void {
+export async function setupConvertBlockPage(): Promise<void> {
   // Setup keyboard shortcuts for both
-  document.addEventListener('keydown', (e) => {
-    if (e.ctrlKey && e.shiftKey && e.code === 'KeyB') {
+  document.addEventListener('keydown', async (e) => {
+    if (e.ctrlKey && e.shiftKey && e.code === 'KeyW') {
       e.preventDefault();
-      const currentBlockUid =
-        window.roamAlphaAPI.ui.getFocusedBlock()?.['block-uid'];
+      const currentBlockUid = await window.roamAlphaAPI.ui.getFocusedBlock()?.[
+        'block-uid'
+      ];
       convertBlockToPage(currentBlockUid);
     } else if (e.ctrlKey && e.shiftKey && e.code === 'KeyQ') {
       let pageUid = '';
-      const currentBlockUid =
-        window.roamAlphaAPI.ui.getFocusedBlock()?.['block-uid'];
-      console.log({ currentBlockUid });
+      const currentBlockUid = await window.roamAlphaAPI.ui.getFocusedBlock()?.[
+        'block-uid'
+      ];
       if (currentBlockUid) {
-        pageUid = window.roamAlphaAPI.q(
+        pageUid = await window.roamAlphaAPI.q(
           `[:find ?uid :in $ ?block-uid :where [?b :block/uid ?block-uid] [?b :block/page ?p] [?p :block/uid ?uid]]`,
           currentBlockUid
         )?.[0]?.[0];
       } else {
         // Get pageUid from main view as default behavior
-        const uid = getCurrentPageUid();
+        // const uid = window.roamAlphaAPI.ui.mainWindow.getOpenPageOrBlockUid();
         pageUid =
-          window.roamAlphaAPI.q(
-            `[:find ?page-uid
-              :in $ ?uid
-              :where [?e :block/uid ?uid]
-                      [?e :block/page ?p]
-                      [?p :block/uid ?page-uid]]`,
-            uid
-          )?.[0]?.[0] || uid;
+          await window.roamAlphaAPI.ui.mainWindow.getOpenPageOrBlockUid();
+        console.log(pageUid);
       }
+      console.log('ASDF');
 
       const DAILY_NOTE_UID_REGEX =
         /^(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])\-\d{4}$/;
