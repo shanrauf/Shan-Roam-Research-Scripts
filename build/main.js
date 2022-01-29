@@ -2978,6 +2978,43 @@
             });
         });
     }
+    function focusOnWindow(w) {
+        var _a, _b;
+        return __awaiter(this, void 0, void 0, function () {
+            var uid, firstChildUid;
+            return __generator(this, function (_c) {
+                switch (_c.label) {
+                    case 0:
+                        uid = w === null || w === void 0 ? void 0 : w['page-uid'];
+                        if (!uid) return [3 /*break*/, 3];
+                        return [4 /*yield*/, ((_b = (_a = window.roamAlphaAPI.q("\n    [:find ?uid :where [?e :block/uid \"".concat(uid, "\"] [?e :block/children ?c] [?c :block/order 0] [?c :block/uid ?uid]]\n    "))) === null || _a === void 0 ? void 0 : _a[0]) === null || _b === void 0 ? void 0 : _b[0])];
+                    case 1:
+                        firstChildUid = _c.sent();
+                        if (!firstChildUid)
+                            return [2 /*return*/];
+                        return [4 /*yield*/, window.roamAlphaAPI.ui.setBlockFocusAndSelection({
+                                location: {
+                                    'block-uid': firstChildUid,
+                                    'window-id': w['window-id']
+                                }
+                            })];
+                    case 2:
+                        _c.sent();
+                        return [3 /*break*/, 5];
+                    case 3: return [4 /*yield*/, window.roamAlphaAPI.ui.setBlockFocusAndSelection({
+                            location: {
+                                'block-uid': w['block-uid'],
+                                'window-id': w['window-id']
+                            }
+                        })];
+                    case 4:
+                        _c.sent();
+                        _c.label = 5;
+                    case 5: return [2 /*return*/];
+                }
+            });
+        });
+    }
     function createDNPBlockAndFocus(ctrlSelected) {
         return __awaiter(this, void 0, void 0, function () {
             var todayUid, blockUid, order, windowId;
@@ -3007,7 +3044,7 @@
                                 window: {
                                     type: 'block',
                                     'block-uid': blockUid,
-                                    order: window.roamAlphaAPI.ui.rightSidebar.getWindows().length,
+                                    order: 0,
                                 },
                             })];
                     case 4:
@@ -3047,62 +3084,184 @@
             });
         });
     }
+    function getSortedSidebarWindows() {
+        return window.roamAlphaAPI.ui.rightSidebar.getWindows().sort(function (a, b) { return a.order - b.order; });
+    }
     function setupKeyboardShortcuts() {
         var _this = this;
         setupConvertBlockPage();
         document.addEventListener('keydown', function (e) { return __awaiter(_this, void 0, void 0, function () {
-            var key, windowOrder, roamWindow, roamWindowId, roamWindowUid;
-            var _a;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
+            var key, windows, windowOrder, roamWindow, focusedBlock_1, backwardsSelected, windows, focusedWindow, windowToFocusOn, focusedWindowOrder, windows, focusedBlock_2, focusedWindow, firstSidebarWindow, uid, nextWindow, nextWindowIdx;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
                     case 0:
                         key = parseInt(e.key);
-                        console.log(key);
                         if (!(e.ctrlKey && e.shiftKey && e.code === 'Backspace')) return [3 /*break*/, 1];
                         onShortcut(archiveBlock);
-                        return [3 /*break*/, 7];
+                        return [3 /*break*/, 30];
                     case 1:
                         if (!(e.ctrlKey && e.shiftKey && e.code === 'KeyX')) return [3 /*break*/, 2];
                         onShortcut(refactorBlock);
-                        return [3 /*break*/, 7];
+                        return [3 /*break*/, 30];
                     case 2:
                         if (!(e.altKey && e.code === 'KeyB')) return [3 /*break*/, 4];
                         return [4 /*yield*/, createDNPBlockAndFocus(e.ctrlKey)];
                     case 3:
-                        _b.sent();
-                        return [3 /*break*/, 7];
+                        _a.sent();
+                        return [3 /*break*/, 30];
                     case 4:
-                        if (!(e.altKey && key >= 0 && key <= 9)) return [3 /*break*/, 7];
+                        if (!(e.altKey && (e.key === "-" || (key >= 0 && key <= 9)))) return [3 /*break*/, 8];
                         if (!(key === 1)) return [3 /*break*/, 6];
-                        return [4 /*yield*/, window.roamAlphaAPI.ui.setBlockFocusAndSelection({
-                                location: {
-                                    'block-uid': window.roamAlphaAPI.ui.mainWindow.getOpenPageOrBlockUid(),
-                                    'window-id': 'main-window',
-                                },
-                            })];
+                        return [4 /*yield*/, window.roamAlphaAPI.ui.mainWindow.focusFirstBlock()];
                     case 5:
-                        _b.sent();
+                        _a.sent();
                         return [2 /*return*/];
                     case 6:
-                        windowOrder = e.key === '0'
-                            ? window.roamAlphaAPI.ui.rightSidebar.getWindows().length - 1
-                            : key - 1;
-                        console.log(windowOrder);
-                        roamWindow = (_a = window.roamAlphaAPI.ui.rightSidebar.getWindows()) === null || _a === void 0 ? void 0 : _a[windowOrder];
-                        console.log(roamWindow);
+                        windows = getSortedSidebarWindows()
+                            .reverse();
+                        if (!(windows === null || windows === void 0 ? void 0 : windows.length))
+                            return [2 /*return*/];
+                        windowOrder = 0;
+                        if (e.key === "-") {
+                            windowOrder = windows.length - 1;
+                        }
+                        else if (e.key === "0") {
+                            windowOrder = 8;
+                        }
+                        else {
+                            windowOrder = key - 2;
+                        }
+                        roamWindow = windows[windowOrder];
                         if (roamWindow.type === 'graph' || roamWindow.type == 'mentions')
                             return [2 /*return*/];
-                        roamWindowId = roamWindow['window-id'];
-                        console.log('ASDF');
-                        roamWindowUid = (roamWindow === null || roamWindow === void 0 ? void 0 : roamWindow['page-uid']) || (roamWindow === null || roamWindow === void 0 ? void 0 : roamWindow['block-uid']);
-                        window.roamAlphaAPI.ui.setBlockFocusAndSelection({
-                            location: {
-                                'block-uid': roamWindowUid,
-                                'window-id': roamWindowId,
-                            },
+                        return [4 /*yield*/, focusOnWindow(roamWindow)];
+                    case 7:
+                        _a.sent();
+                        return [3 /*break*/, 30];
+                    case 8:
+                        if (!(e.altKey && (e.key === 'z' || e.key === 'x'))) return [3 /*break*/, 20];
+                        focusedBlock_1 = window.roamAlphaAPI.ui.getFocusedBlock();
+                        if (!!focusedBlock_1) return [3 /*break*/, 10];
+                        return [4 /*yield*/, window.roamAlphaAPI.ui.mainWindow.focusFirstBlock()];
+                    case 9:
+                        _a.sent();
+                        return [2 /*return*/];
+                    case 10:
+                        backwardsSelected = e.key === 'z';
+                        windows = getSortedSidebarWindows().reverse();
+                        if (!windows.length)
+                            return [2 /*return*/];
+                        focusedWindow = windows.find(function (w) { return w['window-id'] === focusedBlock_1['window-id']; });
+                        windowToFocusOn = void 0;
+                        if (!!focusedWindow) return [3 /*break*/, 11];
+                        // Focused on main view
+                        windowToFocusOn = backwardsSelected ? windows.at(-1) : windows[0];
+                        return [3 /*break*/, 18];
+                    case 11:
+                        focusedWindowOrder = windows.indexOf(focusedWindow);
+                        if (!backwardsSelected) return [3 /*break*/, 15];
+                        if (!(focusedWindowOrder == 0)) return [3 /*break*/, 13];
+                        return [4 /*yield*/, window.roamAlphaAPI.ui.mainWindow.focusFirstBlock()];
+                    case 12:
+                        _a.sent();
+                        return [2 /*return*/];
+                    case 13:
+                        windowToFocusOn = windows[focusedWindowOrder - 1];
+                        _a.label = 14;
+                    case 14: return [3 /*break*/, 18];
+                    case 15:
+                        if (!(focusedWindowOrder == windows.length - 1)) return [3 /*break*/, 17];
+                        return [4 /*yield*/, window.roamAlphaAPI.ui.mainWindow.focusFirstBlock()];
+                    case 16:
+                        _a.sent();
+                        return [2 /*return*/];
+                    case 17:
+                        windowToFocusOn = windows[focusedWindowOrder + 1];
+                        _a.label = 18;
+                    case 18: return [4 /*yield*/, focusOnWindow(windowToFocusOn)];
+                    case 19:
+                        _a.sent();
+                        return [3 /*break*/, 30];
+                    case 20:
+                        if (!(e.altKey && e.key === "w")) return [3 /*break*/, 30];
+                        windows = getSortedSidebarWindows().reverse();
+                        if (!!windows.length) return [3 /*break*/, 22];
+                        // only main view is open
+                        return [4 /*yield*/, window.roamAlphaAPI.ui.mainWindow.openDailyNotes()];
+                    case 21:
+                        // only main view is open
+                        _a.sent();
+                        window.roamAlphaAPI.ui.mainWindow.focusFirstBlock();
+                        return [2 /*return*/];
+                    case 22:
+                        focusedBlock_2 = window.roamAlphaAPI.ui.getFocusedBlock();
+                        focusedWindow = windows.find(function (w) { return w['window-id'] === (focusedBlock_2 === null || focusedBlock_2 === void 0 ? void 0 : focusedBlock_2['window-id']); });
+                        if (!(!focusedBlock_2 || !focusedWindow)) return [3 /*break*/, 28];
+                        firstSidebarWindow = windows[0];
+                        uid = firstSidebarWindow === null || firstSidebarWindow === void 0 ? void 0 : firstSidebarWindow['page-uid'];
+                        if (!uid) return [3 /*break*/, 24];
+                        return [4 /*yield*/, window.roamAlphaAPI.ui.mainWindow.openPage({
+                                page: {
+                                    uid: uid
+                                }
+                            })];
+                    case 23:
+                        _a.sent();
+                        return [3 /*break*/, 26];
+                    case 24:
+                        uid = firstSidebarWindow['block-uid'];
+                        return [4 /*yield*/, window.roamAlphaAPI.ui.mainWindow.openBlock({
+                                block: {
+                                    uid: uid
+                                }
+                            })];
+                    case 25:
+                        _a.sent();
+                        _a.label = 26;
+                    case 26: return [4 /*yield*/, window.roamAlphaAPI.ui.rightSidebar.removeWindow({
+                            window: {
+                                'block-uid': uid,
+                                type: firstSidebarWindow.type
+                            }
+                        })];
+                    case 27:
+                        _a.sent();
+                        return [2 /*return*/];
+                    case 28:
+                        nextWindow = void 0;
+                        nextWindowIdx = windows.indexOf(focusedWindow) + 1;
+                        // TODO there may only be one sidebar window, meaning closing it is just focusing on main view
+                        if (nextWindowIdx === windows.length) {
+                            // That means we're closing the last window, so focus on window to the left
+                            if (windows.length === 1) {
+                                // The remaining window is the main view, so focus on that
+                                window.roamAlphaAPI.ui.rightSidebar.removeWindow({
+                                    window: {
+                                        'block-uid': (focusedWindow === null || focusedWindow === void 0 ? void 0 : focusedWindow['page-uid']) || focusedWindow['block-uid'],
+                                        type: focusedWindow.type
+                                    }
+                                });
+                                window.roamAlphaAPI.ui.mainWindow.focusFirstBlock();
+                                return [2 /*return*/];
+                            }
+                            else {
+                                nextWindow = windows.at(-2);
+                            }
+                        }
+                        else {
+                            nextWindow = windows.at(nextWindowIdx);
+                        }
+                        window.roamAlphaAPI.ui.rightSidebar.removeWindow({
+                            window: {
+                                'block-uid': (focusedWindow === null || focusedWindow === void 0 ? void 0 : focusedWindow['page-uid']) || focusedWindow['block-uid'],
+                                type: focusedWindow.type
+                            }
                         });
-                        _b.label = 7;
-                    case 7: return [2 /*return*/];
+                        return [4 /*yield*/, focusOnWindow(nextWindow)];
+                    case 29:
+                        _a.sent();
+                        _a.label = 30;
+                    case 30: return [2 /*return*/];
                 }
             });
         }); });
