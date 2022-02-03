@@ -87,6 +87,10 @@ async function convertBlockToPage(blockUid: string): Promise<void> {
 async function convertPageToBlock(pageUid: string): Promise<void> {
   const today = new Date();
   const todayUid = toRoamDateUid(today);
+  const focusedWindow = window.roamAlphaAPI.ui.getFocusedBlock();
+  const onMainView = !window.roamAlphaAPI.ui.rightSidebar
+    .getWindows()
+    .find((w) => w['window-id'] === focusedWindow['window-id']);
 
   const page: RoamQPullBlock = await window.roamAlphaAPI.q(
     `[:find (pull ?e [:node/title :block/string :block/order :block/uid {:block/_refs 2} {:block/children 2}]) :in $ ?uid :where [?e :block/uid ?uid]]`,
@@ -145,12 +149,21 @@ async function convertPageToBlock(pageUid: string): Promise<void> {
       uid: pageUid,
     },
   });
-  await window.roamAlphaAPI.ui.rightSidebar.addWindow({
-    window: {
-      type: 'block',
-      'block-uid': newBlockUid,
-    },
-  });
+
+  if (onMainView) {
+    window.roamAlphaAPI.ui.mainWindow.openBlock({
+      block: {
+        uid: newBlockUid,
+      },
+    });
+  } else {
+    await window.roamAlphaAPI.ui.rightSidebar.addWindow({
+      window: {
+        type: 'block',
+        'block-uid': newBlockUid,
+      },
+    });
+  }
 }
 
 export async function setupConvertBlockPage(): Promise<void> {

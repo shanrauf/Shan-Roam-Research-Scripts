@@ -2606,12 +2606,16 @@
     function convertPageToBlock(pageUid) {
         var _a, _b;
         return __awaiter(this, void 0, void 0, function () {
-            var today, todayUid, page, pageTitle, newBlockUid, _i, _c, c, childUid, blockOrder, backlinks, _d, backlinks_2, link, newStr;
+            var today, todayUid, focusedWindow, onMainView, page, pageTitle, newBlockUid, _i, _c, c, childUid, blockOrder, backlinks, _d, backlinks_2, link, newStr;
             return __generator(this, function (_e) {
                 switch (_e.label) {
                     case 0:
                         today = new Date();
                         todayUid = toRoamDateUid(today);
+                        focusedWindow = window.roamAlphaAPI.ui.getFocusedBlock();
+                        onMainView = !window.roamAlphaAPI.ui.rightSidebar
+                            .getWindows()
+                            .find(function (w) { return w['window-id'] === focusedWindow['window-id']; });
                         return [4 /*yield*/, ((_b = (_a = window.roamAlphaAPI.q("[:find (pull ?e [:node/title :block/string :block/order :block/uid {:block/_refs 2} {:block/children 2}]) :in $ ?uid :where [?e :block/uid ?uid]]", pageUid)) === null || _a === void 0 ? void 0 : _a[0]) === null || _b === void 0 ? void 0 : _b[0])];
                     case 1:
                         page = _e.sent();
@@ -2680,15 +2684,23 @@
                         })];
                     case 11:
                         _e.sent();
-                        return [4 /*yield*/, window.roamAlphaAPI.ui.rightSidebar.addWindow({
-                                window: {
-                                    type: 'block',
-                                    'block-uid': newBlockUid,
-                                },
-                            })];
-                    case 12:
+                        if (!onMainView) return [3 /*break*/, 12];
+                        window.roamAlphaAPI.ui.mainWindow.openBlock({
+                            block: {
+                                uid: newBlockUid,
+                            },
+                        });
+                        return [3 /*break*/, 14];
+                    case 12: return [4 /*yield*/, window.roamAlphaAPI.ui.rightSidebar.addWindow({
+                            window: {
+                                type: 'block',
+                                'block-uid': newBlockUid,
+                            },
+                        })];
+                    case 13:
                         _e.sent();
-                        return [2 /*return*/];
+                        _e.label = 14;
+                    case 14: return [2 /*return*/];
                 }
             });
         });
