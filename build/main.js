@@ -2503,7 +2503,7 @@
                     case 0:
                         todayDate = new Date();
                         todayUid = toRoamDateUid(todayDate);
-                        return [4 /*yield*/, ((_b = (_a = window.roamAlphaAPI.q("\n  [:find ?e :where [?e :block/uid \"10-10-21\"]]\n  ")) === null || _a === void 0 ? void 0 : _a[0]) === null || _b === void 0 ? void 0 : _b[0])];
+                        return [4 /*yield*/, ((_b = (_a = window.roamAlphaAPI.q("\n  [:find ?e :where [?e :block/uid \"".concat(todayUid, "\"]]\n  "))) === null || _a === void 0 ? void 0 : _a[0]) === null || _b === void 0 ? void 0 : _b[0])];
                     case 1:
                         dnpPageExists = _c.sent();
                         if (!!dnpPageExists) return [3 /*break*/, 3];
@@ -3091,7 +3091,7 @@
                         return [4 /*yield*/, window.roamAlphaAPI.util.generateUID()];
                     case 2:
                         blockUid = _a.sent();
-                        order = window.roamAlphaAPI.q("\n [:find [?c ...] :where [?e :block/uid \"".concat(todayUid, "\"] [??e :block/children ?c]]")).length;
+                        order = window.roamAlphaAPI.q("\n [:find [?c ...] :where [?e :block/uid \"".concat(todayUid, "\"] [?e :block/children ?c]]")).length;
                         return [4 /*yield*/, window.roamAlphaAPI.data.block.create({
                                 location: {
                                     'parent-uid': todayUid,
@@ -3121,8 +3121,8 @@
                         windowId = _a.sent();
                         return [4 /*yield*/, window.roamAlphaAPI.ui.setBlockFocusAndSelection({
                                 location: {
-                                    'window-id': windowId,
                                     'block-uid': blockUid,
+                                    'window-id': windowId,
                                 },
                             })];
                     case 6:

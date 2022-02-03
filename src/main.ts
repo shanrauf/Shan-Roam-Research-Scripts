@@ -94,7 +94,7 @@ async function createDNPBlockAndFocus(ctrlSelected: boolean) {
   const todayUid = await findOrCreateCurrentDNPUid();
   const blockUid = await window.roamAlphaAPI.util.generateUID();
   const order = window.roamAlphaAPI.q(`
- [:find [?c ...] :where [?e :block/uid "${todayUid}"] [??e :block/children ?c]]`).length;
+ [:find [?c ...] :where [?e :block/uid "${todayUid}"] [?e :block/children ?c]]`).length;
 
   await window.roamAlphaAPI.data.block.create({
     location: {
@@ -120,8 +120,8 @@ async function createDNPBlockAndFocus(ctrlSelected: boolean) {
       .filter((w: any) => w['block-uid'] === blockUid)[0]['window-id'];
     await window.roamAlphaAPI.ui.setBlockFocusAndSelection({
       location: {
-        'window-id': windowId,
         'block-uid': blockUid,
+        'window-id': windowId,
       },
     });
   } else {

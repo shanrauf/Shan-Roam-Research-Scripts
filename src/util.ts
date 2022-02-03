@@ -17,7 +17,7 @@ export async function findOrCreateCurrentDNPUid(): Promise<string> {
 
   // Find or create the DNP page
   const dnpPageExists = await window.roamAlphaAPI.q(`
-  [:find ?e :where [?e :block/uid "10-10-21"]]
+  [:find ?e :where [?e :block/uid "${todayUid}"]]
   `)?.[0]?.[0];
 
   if (!dnpPageExists) {
