@@ -3,6 +3,7 @@ import { findOrCreateCurrentDNPUid } from './util';
 import { setupConvertBlockPage } from './convert-block-page';
 import { archiveBlock } from './archive-block';
 import { refactorBlock } from './refactor-block';
+import { setupAliasTabKeybind } from './alias-tab';
 
 const extensionId = 'shan-personal-scripts';
 
@@ -75,17 +76,16 @@ async function focusOnWindow(w: RoamWindow) {
     await window.roamAlphaAPI.ui.setBlockFocusAndSelection({
       location: {
         'block-uid': firstChildUid,
-        'window-id': w['window-id']
-      }
-    })
-  }
-  else {
+        'window-id': w['window-id'],
+      },
+    });
+  } else {
     await window.roamAlphaAPI.ui.setBlockFocusAndSelection({
       location: {
         'block-uid': w['block-uid'],
-        'window-id': w['window-id']
-      }
-    })
+        'window-id': w['window-id'],
+      },
+    });
   }
 }
 
@@ -140,7 +140,9 @@ async function createDNPBlockAndFocus(ctrlSelected: boolean) {
 }
 
 function getSortedSidebarWindows() {
-  return window.roamAlphaAPI.ui.rightSidebar.getWindows().sort((a, b) => a.order - b.order)
+  return window.roamAlphaAPI.ui.rightSidebar
+    .getWindows()
+    .sort((a, b) => a.order - b.order);
 }
 
 function setupKeyboardShortcuts(): void {
@@ -153,7 +155,7 @@ function setupKeyboardShortcuts(): void {
       onShortcut(refactorBlock);
     } else if (e.altKey && e.code === 'KeyB') {
       await createDNPBlockAndFocus(e.ctrlKey);
-    } else if (e.altKey && (e.key === "-" || (key >= 0 && key <= 9))) {
+    } else if (e.altKey && (e.key === '-' || (key >= 0 && key <= 9))) {
       // Select specific Roam window tab
       if (key === 1) {
         await window.roamAlphaAPI.ui.mainWindow.focusFirstBlock();
@@ -161,18 +163,15 @@ function setupKeyboardShortcuts(): void {
       }
       // Now referring to sidebar order (which starts at 0); main view was handled above
       // I reverse the order because with my CSS, new sidebar windows open at the end
-      const windows = getSortedSidebarWindows()
-        .reverse();
+      const windows = getSortedSidebarWindows().reverse();
       if (!windows?.length) return;
 
       let windowOrder = 0;
-      if (e.key === "-") {
+      if (e.key === '-') {
         windowOrder = windows.length - 1;
-      }
-      else if (e.key === "0") {
+      } else if (e.key === '0') {
         windowOrder = 8;
-      }
-      else {
+      } else {
         windowOrder = key - 2;
       }
       const roamWindow = windows[windowOrder];
@@ -192,36 +191,34 @@ function setupKeyboardShortcuts(): void {
 
       if (!windows.length) return;
 
-      const focusedWindow = windows.find(w => w['window-id'] === focusedBlock['window-id']);
+      const focusedWindow = windows.find(
+        (w) => w['window-id'] === focusedBlock['window-id']
+      );
 
       let windowToFocusOn;
       if (!focusedWindow) {
         // Focused on main view
-        windowToFocusOn = backwardsSelected ? windows.at(-1) : windows[0]; 
-      }
-      else {
+        windowToFocusOn = backwardsSelected ? windows.at(-1) : windows[0];
+      } else {
         const focusedWindowOrder = windows.indexOf(focusedWindow);
         if (backwardsSelected) {
           if (focusedWindowOrder == 0) {
             await window.roamAlphaAPI.ui.mainWindow.focusFirstBlock();
             return;
-          }
-          else {
+          } else {
             windowToFocusOn = windows[focusedWindowOrder - 1];
           }
-        }
-        else {
+        } else {
           if (focusedWindowOrder == windows.length - 1) {
             await window.roamAlphaAPI.ui.mainWindow.focusFirstBlock();
             return;
-          }
-          else {
+          } else {
             windowToFocusOn = windows[focusedWindowOrder + 1];
           }
         }
       }
       await focusOnWindow(windowToFocusOn);
-    } else if (e.altKey && e.key === "w") {
+    } else if (e.altKey && e.key === 'w') {
       // Close Roam window tab
       const windows = getSortedSidebarWindows().reverse();
 
@@ -234,7 +231,9 @@ function setupKeyboardShortcuts(): void {
 
       const focusedBlock = window.roamAlphaAPI.ui.getFocusedBlock();
 
-      const focusedWindow = windows.find(w => w['window-id'] === focusedBlock?.['window-id']);
+      const focusedWindow = windows.find(
+        (w) => w['window-id'] === focusedBlock?.['window-id']
+      );
       if (!focusedBlock || !focusedWindow) {
         // the focused window is the main window OR no window is focused (so pretend main window)
         const firstSidebarWindow = windows[0];
@@ -242,28 +241,26 @@ function setupKeyboardShortcuts(): void {
         if (uid) {
           await window.roamAlphaAPI.ui.mainWindow.openPage({
             page: {
-              uid
-            }
+              uid,
+            },
           });
-        }
-        else {
+        } else {
           uid = firstSidebarWindow['block-uid'];
           await window.roamAlphaAPI.ui.mainWindow.openBlock({
             block: {
-              uid
-            }
+              uid,
+            },
           });
         }
 
         await window.roamAlphaAPI.ui.rightSidebar.removeWindow({
           window: {
             'block-uid': uid,
-            type: firstSidebarWindow.type
-          }
-        })
+            type: firstSidebarWindow.type,
+          },
+        });
         return;
-      }
-      else {
+      } else {
         let nextWindow;
         let nextWindowIdx = windows.indexOf(focusedWindow) + 1;
         // TODO there may only be one sidebar window, meaning closing it is just focusing on main view
@@ -273,26 +270,26 @@ function setupKeyboardShortcuts(): void {
             // The remaining window is the main view, so focus on that
             window.roamAlphaAPI.ui.rightSidebar.removeWindow({
               window: {
-                'block-uid': focusedWindow?.['page-uid'] || focusedWindow['block-uid'],
-                type: focusedWindow.type
-              }
+                'block-uid':
+                  focusedWindow?.['page-uid'] || focusedWindow['block-uid'],
+                type: focusedWindow.type,
+              },
             });
 
             window.roamAlphaAPI.ui.mainWindow.focusFirstBlock();
             return;
-          }
-          else {
+          } else {
             nextWindow = windows.at(-2);
           }
-        }
-        else {
+        } else {
           nextWindow = windows.at(nextWindowIdx);
         }
         window.roamAlphaAPI.ui.rightSidebar.removeWindow({
           window: {
-            'block-uid': focusedWindow?.['page-uid'] || focusedWindow['block-uid'],
-            type: focusedWindow.type
-          }
+            'block-uid':
+              focusedWindow?.['page-uid'] || focusedWindow['block-uid'],
+            type: focusedWindow.type,
+          },
         });
 
         await focusOnWindow(nextWindow);
@@ -303,4 +300,5 @@ function setupKeyboardShortcuts(): void {
 
 console.log('Initializing keyboard shortcuts');
 setupKeyboardShortcuts();
+setupAliasTabKeybind();
 console.log(`Initialized ${extensionId}`);

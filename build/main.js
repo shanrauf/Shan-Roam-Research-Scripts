@@ -54,6 +54,16 @@
         }
     }
 
+    function __spreadArray(to, from, pack) {
+        if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+            if (ar || !(i in from)) {
+                if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+                ar[i] = from[i];
+            }
+        }
+        return to.concat(ar || Array.prototype.slice.call(from));
+    }
+
     function requiredArgs(required, args) {
       if (args.length < required) {
         throw new TypeError(required + ' argument' + (required > 1 ? 's' : '') + ' required, but only ' + args.length + ' present');
@@ -2914,6 +2924,49 @@
         });
     }
 
+    // @ts-nocheck
+    function setupAliasTabKeybind() {
+        setTimeout(function () {
+            __spreadArray([], document.querySelectorAll('div#app, div.roam-app'), true).forEach(function (elem) {
+                elem.addEventListener('keydown', function (e) {
+                    if (e.code === 'Tab' && !e.shiftKey) {
+                        var txtArea = document.activeElement;
+                        txtArea.selectionEnd += 2;
+                        var sele = window.getSelection().toString();
+                        var match = '';
+                        if ((match = sele.match(/^\]\(/))) {
+                            e.preventDefault();
+                            e.stopImmediatePropagation();
+                            var alias = txtArea.value
+                                .substring(0, txtArea.selectionStart)
+                                .match(/[^\[]*$/);
+                            txtArea.selectionStart += match[0].length;
+                            txtArea.selectionEnd -= sele.length - match[0].length;
+                            if (alias[0].length > 1 && e.ctrlKey) {
+                                alias = '[[' + alias[0] + ']]';
+                                txtArea.setRangeText(alias, txtArea.selectionStart, txtArea.selectionStart, 'end');
+                                txtArea.selectionEnd -= 2;
+                                txtArea.dispatchEvent(new Event('input', { bubbles: true }));
+                            }
+                        }
+                        else if ((match = sele.match(/^\)(?!\))/)) ||
+                            (match = sele.match(/^\](?!\])/)) ||
+                            (match = sele.match(/^\}(?!\{)/)) ||
+                            (match = sele.match(/^\}\{/)) ||
+                            (match = sele.match(/^\$\$/))) {
+                            e.preventDefault();
+                            e.stopImmediatePropagation();
+                            txtArea.selectionStart += match[0].length;
+                            txtArea.selectionEnd -= sele.length - match[0].length;
+                        }
+                        else
+                            txtArea.selectionEnd -= sele.length;
+                    }
+                });
+            });
+        }, 1);
+    }
+
     var extensionId = 'shan-personal-scripts';
     function getAllSiblings(el) {
         // modified from https://stackoverflow.com/questions/4378784/how-to-find-all-siblings-of-the-currently-selected-dom-object
@@ -2995,8 +3048,8 @@
                         return [4 /*yield*/, window.roamAlphaAPI.ui.setBlockFocusAndSelection({
                                 location: {
                                     'block-uid': firstChildUid,
-                                    'window-id': w['window-id']
-                                }
+                                    'window-id': w['window-id'],
+                                },
                             })];
                     case 2:
                         _c.sent();
@@ -3004,8 +3057,8 @@
                     case 3: return [4 /*yield*/, window.roamAlphaAPI.ui.setBlockFocusAndSelection({
                             location: {
                                 'block-uid': w['block-uid'],
-                                'window-id': w['window-id']
-                            }
+                                'window-id': w['window-id'],
+                            },
                         })];
                     case 4:
                         _c.sent();
@@ -3085,7 +3138,9 @@
         });
     }
     function getSortedSidebarWindows() {
-        return window.roamAlphaAPI.ui.rightSidebar.getWindows().sort(function (a, b) { return a.order - b.order; });
+        return window.roamAlphaAPI.ui.rightSidebar
+            .getWindows()
+            .sort(function (a, b) { return a.order - b.order; });
     }
     function setupKeyboardShortcuts() {
         var _this = this;
@@ -3110,22 +3165,21 @@
                         _a.sent();
                         return [3 /*break*/, 30];
                     case 4:
-                        if (!(e.altKey && (e.key === "-" || (key >= 0 && key <= 9)))) return [3 /*break*/, 8];
+                        if (!(e.altKey && (e.key === '-' || (key >= 0 && key <= 9)))) return [3 /*break*/, 8];
                         if (!(key === 1)) return [3 /*break*/, 6];
                         return [4 /*yield*/, window.roamAlphaAPI.ui.mainWindow.focusFirstBlock()];
                     case 5:
                         _a.sent();
                         return [2 /*return*/];
                     case 6:
-                        windows = getSortedSidebarWindows()
-                            .reverse();
+                        windows = getSortedSidebarWindows().reverse();
                         if (!(windows === null || windows === void 0 ? void 0 : windows.length))
                             return [2 /*return*/];
                         windowOrder = 0;
-                        if (e.key === "-") {
+                        if (e.key === '-') {
                             windowOrder = windows.length - 1;
                         }
-                        else if (e.key === "0") {
+                        else if (e.key === '0') {
                             windowOrder = 8;
                         }
                         else {
@@ -3183,7 +3237,7 @@
                         _a.sent();
                         return [3 /*break*/, 30];
                     case 20:
-                        if (!(e.altKey && e.key === "w")) return [3 /*break*/, 30];
+                        if (!(e.altKey && e.key === 'w')) return [3 /*break*/, 30];
                         windows = getSortedSidebarWindows().reverse();
                         if (!!windows.length) return [3 /*break*/, 22];
                         // only main view is open
@@ -3202,8 +3256,8 @@
                         if (!uid) return [3 /*break*/, 24];
                         return [4 /*yield*/, window.roamAlphaAPI.ui.mainWindow.openPage({
                                 page: {
-                                    uid: uid
-                                }
+                                    uid: uid,
+                                },
                             })];
                     case 23:
                         _a.sent();
@@ -3212,8 +3266,8 @@
                         uid = firstSidebarWindow['block-uid'];
                         return [4 /*yield*/, window.roamAlphaAPI.ui.mainWindow.openBlock({
                                 block: {
-                                    uid: uid
-                                }
+                                    uid: uid,
+                                },
                             })];
                     case 25:
                         _a.sent();
@@ -3221,8 +3275,8 @@
                     case 26: return [4 /*yield*/, window.roamAlphaAPI.ui.rightSidebar.removeWindow({
                             window: {
                                 'block-uid': uid,
-                                type: firstSidebarWindow.type
-                            }
+                                type: firstSidebarWindow.type,
+                            },
                         })];
                     case 27:
                         _a.sent();
@@ -3238,8 +3292,8 @@
                                 window.roamAlphaAPI.ui.rightSidebar.removeWindow({
                                     window: {
                                         'block-uid': (focusedWindow === null || focusedWindow === void 0 ? void 0 : focusedWindow['page-uid']) || focusedWindow['block-uid'],
-                                        type: focusedWindow.type
-                                    }
+                                        type: focusedWindow.type,
+                                    },
                                 });
                                 window.roamAlphaAPI.ui.mainWindow.focusFirstBlock();
                                 return [2 /*return*/];
@@ -3254,8 +3308,8 @@
                         window.roamAlphaAPI.ui.rightSidebar.removeWindow({
                             window: {
                                 'block-uid': (focusedWindow === null || focusedWindow === void 0 ? void 0 : focusedWindow['page-uid']) || focusedWindow['block-uid'],
-                                type: focusedWindow.type
-                            }
+                                type: focusedWindow.type,
+                            },
                         });
                         return [4 /*yield*/, focusOnWindow(nextWindow)];
                     case 29:
@@ -3268,6 +3322,7 @@
     }
     console.log('Initializing keyboard shortcuts');
     setupKeyboardShortcuts();
+    setupAliasTabKeybind();
     console.log("Initialized ".concat(extensionId));
 
 })();

@@ -42,7 +42,8 @@ Converts the page you're cursor is focused in (so if you're focused on a page ti
 
 ### Cycle Roam window tabs: `Alt + Z/X`
 
-### Close Roam window tabs: `Alt + W`
+### Close Roam window tab: `Alt + W`
 
 ### Focus on specific Roam window tab: `Alt + Number`
-(the `-` key focuses on the last window in the sidebar)
+- (the `-` key focuses on the last window in the sidebar)
+- Note: This will work in reverse on plain Roam; I use CSS to reverse the order of sidebar pages (TODO, add a CSS snippet here)
