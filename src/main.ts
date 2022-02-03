@@ -1,6 +1,6 @@
 import * as roamAPI from 'roam-research-js';
 import { findOrCreateCurrentDNPUid } from './util';
-import { setupConvertBlockPage } from './convert-block-page';
+import { convertBlockToPage, convertPageToBlock } from './convert-block-page';
 import { archiveBlock } from './archive-block';
 import { refactorBlock } from './refactor-block';
 import { setupAliasTabKeybind } from './alias-tab';
@@ -146,7 +146,6 @@ function getSortedSidebarWindows() {
 }
 
 function setupKeyboardShortcuts(): void {
-  setupConvertBlockPage();
   document.addEventListener('keydown', async (e) => {
     const key = parseInt(e.key);
     if (e.ctrlKey && e.shiftKey && e.code === 'Backspace') {
@@ -155,6 +154,44 @@ function setupKeyboardShortcuts(): void {
       onShortcut(refactorBlock);
     } else if (e.altKey && e.code === 'KeyB') {
       await createDNPBlockAndFocus(e.ctrlKey);
+    } else if (e.ctrlKey && e.altKey && e.code === 'KeyW') {
+      e.preventDefault();
+      const currentBlockUid = await window.roamAlphaAPI.ui.getFocusedBlock()?.[
+        'block-uid'
+      ];
+      convertBlockToPage(currentBlockUid);
+    } else if (e.ctrlKey && e.altKey && e.code === 'KeyQ') {
+      let pageUid = '';
+      const editingPageTitleEl = document.getElementsByClassName(
+        'rm-title-editing-display'
+      )?.[0];
+
+      const currentBlockUid = await window.roamAlphaAPI.ui.getFocusedBlock()?.[
+        'block-uid'
+      ];
+      if (editingPageTitleEl) {
+        const pageTitle = editingPageTitleEl.firstElementChild.innerHTML;
+        if (!pageTitle) return;
+
+        pageUid = await window.roamAlphaAPI.q(
+          `[:find ?uid :where [?e :node/title "${pageTitle}"] [?e :block/uid ?uid]]`
+        )?.[0]?.[0];
+      } else if (currentBlockUid) {
+        pageUid = await window.roamAlphaAPI.q(
+          `[:find ?uid :in $ ?block-uid :where [?b :block/uid ?block-uid] [?b :block/page ?p] [?p :block/uid ?uid]]`,
+          currentBlockUid
+        )?.[0]?.[0];
+      } else {
+        // Get pageUid from main view as default behavior
+        // const uid = window.roamAlphaAPI.ui.mainWindow.getOpenPageOrBlockUid();
+        pageUid =
+          await window.roamAlphaAPI.ui.mainWindow.getOpenPageOrBlockUid();
+      }
+      const DAILY_NOTE_UID_REGEX =
+        /^(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])\-\d{4}$/;
+      if (!pageUid || pageUid.match(DAILY_NOTE_UID_REGEX)?.length) return;
+
+      convertPageToBlock(pageUid);
     } else if (e.altKey && (e.key === '-' || (key >= 0 && key <= 9))) {
       // Select specific Roam window tab
       if (key === 1) {

@@ -21,7 +21,7 @@ export function getUids(block: HTMLDivElement | HTMLTextAreaElement) {
   return block ? getUidsFromId(block.id) : { blockUid: '', parentUid: '' };
 }
 
-async function convertBlockToPage(blockUid: string): Promise<void> {
+export async function convertBlockToPage(blockUid: string): Promise<void> {
   // Quickly minimize the block to hide the conversion
   window.roamAlphaAPI.data.block.update({
     block: {
@@ -84,7 +84,7 @@ async function convertBlockToPage(blockUid: string): Promise<void> {
   }
 }
 
-async function convertPageToBlock(pageUid: string): Promise<void> {
+export async function convertPageToBlock(pageUid: string): Promise<void> {
   const today = new Date();
   const todayUid = toRoamDateUid(today);
   const focusedWindow = window.roamAlphaAPI.ui.getFocusedBlock();
@@ -164,49 +164,4 @@ async function convertPageToBlock(pageUid: string): Promise<void> {
       },
     });
   }
-}
-
-export async function setupConvertBlockPage(): Promise<void> {
-  // Setup keyboard shortcuts for both
-  document.addEventListener('keydown', async (e) => {
-    if (e.ctrlKey && e.altKey && e.code === 'KeyW') {
-      e.preventDefault();
-      const currentBlockUid = await window.roamAlphaAPI.ui.getFocusedBlock()?.[
-        'block-uid'
-      ];
-      convertBlockToPage(currentBlockUid);
-    } else if (e.ctrlKey && e.altKey && e.code === 'KeyQ') {
-      let pageUid = '';
-      const editingPageTitleEl = document.getElementsByClassName(
-        'rm-title-editing-display'
-      )?.[0];
-
-      const currentBlockUid = await window.roamAlphaAPI.ui.getFocusedBlock()?.[
-        'block-uid'
-      ];
-      if (editingPageTitleEl) {
-        const pageTitle = editingPageTitleEl.firstElementChild.innerHTML;
-        if (!pageTitle) return;
-
-        pageUid = await window.roamAlphaAPI.q(
-          `[:find ?uid :where [?e :node/title "${pageTitle}"] [?e :block/uid ?uid]]`
-        )?.[0]?.[0];
-      } else if (currentBlockUid) {
-        pageUid = await window.roamAlphaAPI.q(
-          `[:find ?uid :in $ ?block-uid :where [?b :block/uid ?block-uid] [?b :block/page ?p] [?p :block/uid ?uid]]`,
-          currentBlockUid
-        )?.[0]?.[0];
-      } else {
-        // Get pageUid from main view as default behavior
-        // const uid = window.roamAlphaAPI.ui.mainWindow.getOpenPageOrBlockUid();
-        pageUid =
-          await window.roamAlphaAPI.ui.mainWindow.getOpenPageOrBlockUid();
-      }
-      const DAILY_NOTE_UID_REGEX =
-        /^(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])\-\d{4}$/;
-      if (!pageUid || pageUid.match(DAILY_NOTE_UID_REGEX)?.length) return;
-
-      convertPageToBlock(pageUid);
-    }
-  });
 }

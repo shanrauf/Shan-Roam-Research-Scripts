@@ -2705,66 +2705,6 @@
             });
         });
     }
-    function setupConvertBlockPage() {
-        return __awaiter(this, void 0, void 0, function () {
-            var _this = this;
-            return __generator(this, function (_a) {
-                // Setup keyboard shortcuts for both
-                document.addEventListener('keydown', function (e) { return __awaiter(_this, void 0, void 0, function () {
-                    var currentBlockUid, pageUid, editingPageTitleEl, currentBlockUid, pageTitle, DAILY_NOTE_UID_REGEX;
-                    var _a, _b, _c, _d, _e, _f, _g, _h;
-                    return __generator(this, function (_j) {
-                        switch (_j.label) {
-                            case 0:
-                                if (!(e.ctrlKey && e.altKey && e.code === 'KeyW')) return [3 /*break*/, 2];
-                                e.preventDefault();
-                                return [4 /*yield*/, ((_a = window.roamAlphaAPI.ui.getFocusedBlock()) === null || _a === void 0 ? void 0 : _a['block-uid'])];
-                            case 1:
-                                currentBlockUid = _j.sent();
-                                convertBlockToPage(currentBlockUid);
-                                return [3 /*break*/, 10];
-                            case 2:
-                                if (!(e.ctrlKey && e.altKey && e.code === 'KeyQ')) return [3 /*break*/, 10];
-                                pageUid = '';
-                                editingPageTitleEl = (_b = document.getElementsByClassName('rm-title-editing-display')) === null || _b === void 0 ? void 0 : _b[0];
-                                return [4 /*yield*/, ((_c = window.roamAlphaAPI.ui.getFocusedBlock()) === null || _c === void 0 ? void 0 : _c['block-uid'])];
-                            case 3:
-                                currentBlockUid = _j.sent();
-                                if (!editingPageTitleEl) return [3 /*break*/, 5];
-                                pageTitle = editingPageTitleEl.firstElementChild.innerHTML;
-                                if (!pageTitle)
-                                    return [2 /*return*/];
-                                return [4 /*yield*/, ((_e = (_d = window.roamAlphaAPI.q("[:find ?uid :where [?e :node/title \"".concat(pageTitle, "\"] [?e :block/uid ?uid]]"))) === null || _d === void 0 ? void 0 : _d[0]) === null || _e === void 0 ? void 0 : _e[0])];
-                            case 4:
-                                pageUid = _j.sent();
-                                return [3 /*break*/, 9];
-                            case 5:
-                                if (!currentBlockUid) return [3 /*break*/, 7];
-                                return [4 /*yield*/, ((_g = (_f = window.roamAlphaAPI.q("[:find ?uid :in $ ?block-uid :where [?b :block/uid ?block-uid] [?b :block/page ?p] [?p :block/uid ?uid]]", currentBlockUid)) === null || _f === void 0 ? void 0 : _f[0]) === null || _g === void 0 ? void 0 : _g[0])];
-                            case 6:
-                                pageUid = _j.sent();
-                                return [3 /*break*/, 9];
-                            case 7: return [4 /*yield*/, window.roamAlphaAPI.ui.mainWindow.getOpenPageOrBlockUid()];
-                            case 8:
-                                // Get pageUid from main view as default behavior
-                                // const uid = window.roamAlphaAPI.ui.mainWindow.getOpenPageOrBlockUid();
-                                pageUid =
-                                    _j.sent();
-                                _j.label = 9;
-                            case 9:
-                                DAILY_NOTE_UID_REGEX = /^(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])\-\d{4}$/;
-                                if (!pageUid || ((_h = pageUid.match(DAILY_NOTE_UID_REGEX)) === null || _h === void 0 ? void 0 : _h.length))
-                                    return [2 /*return*/];
-                                convertPageToBlock(pageUid);
-                                _j.label = 10;
-                            case 10: return [2 /*return*/];
-                        }
-                    });
-                }); });
-                return [2 /*return*/];
-            });
-        });
-    }
 
     var archivedNotes = 'Archived Notes';
     var archivedNotesAttribute = "".concat(archivedNotes, "::");
@@ -3156,34 +3096,76 @@
     }
     function setupKeyboardShortcuts() {
         var _this = this;
-        setupConvertBlockPage();
         document.addEventListener('keydown', function (e) { return __awaiter(_this, void 0, void 0, function () {
-            var key, windows, windowOrder, roamWindow, focusedBlock_1, backwardsSelected, windows, focusedWindow, windowToFocusOn, focusedWindowOrder, windows, focusedBlock_2, focusedWindow, firstSidebarWindow, uid, nextWindow, nextWindowIdx;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
+            var key, currentBlockUid, pageUid, editingPageTitleEl, currentBlockUid, pageTitle, DAILY_NOTE_UID_REGEX, windows, windowOrder, roamWindow, focusedBlock_1, backwardsSelected, windows, focusedWindow, windowToFocusOn, focusedWindowOrder, windows, focusedBlock_2, focusedWindow, firstSidebarWindow, uid, nextWindow, nextWindowIdx;
+            var _a, _b, _c, _d, _e, _f, _g, _h;
+            return __generator(this, function (_j) {
+                switch (_j.label) {
                     case 0:
                         key = parseInt(e.key);
                         if (!(e.ctrlKey && e.shiftKey && e.code === 'Backspace')) return [3 /*break*/, 1];
                         onShortcut(archiveBlock);
-                        return [3 /*break*/, 30];
+                        return [3 /*break*/, 40];
                     case 1:
                         if (!(e.ctrlKey && e.shiftKey && e.code === 'KeyX')) return [3 /*break*/, 2];
                         onShortcut(refactorBlock);
-                        return [3 /*break*/, 30];
+                        return [3 /*break*/, 40];
                     case 2:
                         if (!(e.altKey && e.code === 'KeyB')) return [3 /*break*/, 4];
                         return [4 /*yield*/, createDNPBlockAndFocus(e.ctrlKey)];
                     case 3:
-                        _a.sent();
-                        return [3 /*break*/, 30];
+                        _j.sent();
+                        return [3 /*break*/, 40];
                     case 4:
-                        if (!(e.altKey && (e.key === '-' || (key >= 0 && key <= 9)))) return [3 /*break*/, 8];
-                        if (!(key === 1)) return [3 /*break*/, 6];
-                        return [4 /*yield*/, window.roamAlphaAPI.ui.mainWindow.focusFirstBlock()];
+                        if (!(e.ctrlKey && e.altKey && e.code === 'KeyW')) return [3 /*break*/, 6];
+                        e.preventDefault();
+                        return [4 /*yield*/, ((_a = window.roamAlphaAPI.ui.getFocusedBlock()) === null || _a === void 0 ? void 0 : _a['block-uid'])];
                     case 5:
-                        _a.sent();
-                        return [2 /*return*/];
+                        currentBlockUid = _j.sent();
+                        convertBlockToPage(currentBlockUid);
+                        return [3 /*break*/, 40];
                     case 6:
+                        if (!(e.ctrlKey && e.altKey && e.code === 'KeyQ')) return [3 /*break*/, 14];
+                        pageUid = '';
+                        editingPageTitleEl = (_b = document.getElementsByClassName('rm-title-editing-display')) === null || _b === void 0 ? void 0 : _b[0];
+                        return [4 /*yield*/, ((_c = window.roamAlphaAPI.ui.getFocusedBlock()) === null || _c === void 0 ? void 0 : _c['block-uid'])];
+                    case 7:
+                        currentBlockUid = _j.sent();
+                        if (!editingPageTitleEl) return [3 /*break*/, 9];
+                        pageTitle = editingPageTitleEl.firstElementChild.innerHTML;
+                        if (!pageTitle)
+                            return [2 /*return*/];
+                        return [4 /*yield*/, ((_e = (_d = window.roamAlphaAPI.q("[:find ?uid :where [?e :node/title \"".concat(pageTitle, "\"] [?e :block/uid ?uid]]"))) === null || _d === void 0 ? void 0 : _d[0]) === null || _e === void 0 ? void 0 : _e[0])];
+                    case 8:
+                        pageUid = _j.sent();
+                        return [3 /*break*/, 13];
+                    case 9:
+                        if (!currentBlockUid) return [3 /*break*/, 11];
+                        return [4 /*yield*/, ((_g = (_f = window.roamAlphaAPI.q("[:find ?uid :in $ ?block-uid :where [?b :block/uid ?block-uid] [?b :block/page ?p] [?p :block/uid ?uid]]", currentBlockUid)) === null || _f === void 0 ? void 0 : _f[0]) === null || _g === void 0 ? void 0 : _g[0])];
+                    case 10:
+                        pageUid = _j.sent();
+                        return [3 /*break*/, 13];
+                    case 11: return [4 /*yield*/, window.roamAlphaAPI.ui.mainWindow.getOpenPageOrBlockUid()];
+                    case 12:
+                        // Get pageUid from main view as default behavior
+                        // const uid = window.roamAlphaAPI.ui.mainWindow.getOpenPageOrBlockUid();
+                        pageUid =
+                            _j.sent();
+                        _j.label = 13;
+                    case 13:
+                        DAILY_NOTE_UID_REGEX = /^(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])\-\d{4}$/;
+                        if (!pageUid || ((_h = pageUid.match(DAILY_NOTE_UID_REGEX)) === null || _h === void 0 ? void 0 : _h.length))
+                            return [2 /*return*/];
+                        convertPageToBlock(pageUid);
+                        return [3 /*break*/, 40];
+                    case 14:
+                        if (!(e.altKey && (e.key === '-' || (key >= 0 && key <= 9)))) return [3 /*break*/, 18];
+                        if (!(key === 1)) return [3 /*break*/, 16];
+                        return [4 /*yield*/, window.roamAlphaAPI.ui.mainWindow.focusFirstBlock()];
+                    case 15:
+                        _j.sent();
+                        return [2 /*return*/];
+                    case 16:
                         windows = getSortedSidebarWindows().reverse();
                         if (!(windows === null || windows === void 0 ? void 0 : windows.length))
                             return [2 /*return*/];
@@ -3201,99 +3183,99 @@
                         if (roamWindow.type === 'graph' || roamWindow.type == 'mentions')
                             return [2 /*return*/];
                         return [4 /*yield*/, focusOnWindow(roamWindow)];
-                    case 7:
-                        _a.sent();
-                        return [3 /*break*/, 30];
-                    case 8:
-                        if (!(e.altKey && (e.key === 'z' || e.key === 'x'))) return [3 /*break*/, 20];
+                    case 17:
+                        _j.sent();
+                        return [3 /*break*/, 40];
+                    case 18:
+                        if (!(e.altKey && (e.key === 'z' || e.key === 'x'))) return [3 /*break*/, 30];
                         focusedBlock_1 = window.roamAlphaAPI.ui.getFocusedBlock();
-                        if (!!focusedBlock_1) return [3 /*break*/, 10];
+                        if (!!focusedBlock_1) return [3 /*break*/, 20];
                         return [4 /*yield*/, window.roamAlphaAPI.ui.mainWindow.focusFirstBlock()];
-                    case 9:
-                        _a.sent();
+                    case 19:
+                        _j.sent();
                         return [2 /*return*/];
-                    case 10:
+                    case 20:
                         backwardsSelected = e.key === 'z';
                         windows = getSortedSidebarWindows().reverse();
                         if (!windows.length)
                             return [2 /*return*/];
                         focusedWindow = windows.find(function (w) { return w['window-id'] === focusedBlock_1['window-id']; });
                         windowToFocusOn = void 0;
-                        if (!!focusedWindow) return [3 /*break*/, 11];
+                        if (!!focusedWindow) return [3 /*break*/, 21];
                         // Focused on main view
                         windowToFocusOn = backwardsSelected ? windows.at(-1) : windows[0];
-                        return [3 /*break*/, 18];
-                    case 11:
+                        return [3 /*break*/, 28];
+                    case 21:
                         focusedWindowOrder = windows.indexOf(focusedWindow);
-                        if (!backwardsSelected) return [3 /*break*/, 15];
-                        if (!(focusedWindowOrder == 0)) return [3 /*break*/, 13];
+                        if (!backwardsSelected) return [3 /*break*/, 25];
+                        if (!(focusedWindowOrder == 0)) return [3 /*break*/, 23];
                         return [4 /*yield*/, window.roamAlphaAPI.ui.mainWindow.focusFirstBlock()];
-                    case 12:
-                        _a.sent();
+                    case 22:
+                        _j.sent();
                         return [2 /*return*/];
-                    case 13:
+                    case 23:
                         windowToFocusOn = windows[focusedWindowOrder - 1];
-                        _a.label = 14;
-                    case 14: return [3 /*break*/, 18];
-                    case 15:
-                        if (!(focusedWindowOrder == windows.length - 1)) return [3 /*break*/, 17];
+                        _j.label = 24;
+                    case 24: return [3 /*break*/, 28];
+                    case 25:
+                        if (!(focusedWindowOrder == windows.length - 1)) return [3 /*break*/, 27];
                         return [4 /*yield*/, window.roamAlphaAPI.ui.mainWindow.focusFirstBlock()];
-                    case 16:
-                        _a.sent();
+                    case 26:
+                        _j.sent();
                         return [2 /*return*/];
-                    case 17:
+                    case 27:
                         windowToFocusOn = windows[focusedWindowOrder + 1];
-                        _a.label = 18;
-                    case 18: return [4 /*yield*/, focusOnWindow(windowToFocusOn)];
-                    case 19:
-                        _a.sent();
-                        return [3 /*break*/, 30];
-                    case 20:
-                        if (!(e.altKey && e.key === 'w')) return [3 /*break*/, 30];
+                        _j.label = 28;
+                    case 28: return [4 /*yield*/, focusOnWindow(windowToFocusOn)];
+                    case 29:
+                        _j.sent();
+                        return [3 /*break*/, 40];
+                    case 30:
+                        if (!(e.altKey && e.key === 'w')) return [3 /*break*/, 40];
                         windows = getSortedSidebarWindows().reverse();
-                        if (!!windows.length) return [3 /*break*/, 22];
+                        if (!!windows.length) return [3 /*break*/, 32];
                         // only main view is open
                         return [4 /*yield*/, window.roamAlphaAPI.ui.mainWindow.openDailyNotes()];
-                    case 21:
+                    case 31:
                         // only main view is open
-                        _a.sent();
+                        _j.sent();
                         window.roamAlphaAPI.ui.mainWindow.focusFirstBlock();
                         return [2 /*return*/];
-                    case 22:
+                    case 32:
                         focusedBlock_2 = window.roamAlphaAPI.ui.getFocusedBlock();
                         focusedWindow = windows.find(function (w) { return w['window-id'] === (focusedBlock_2 === null || focusedBlock_2 === void 0 ? void 0 : focusedBlock_2['window-id']); });
-                        if (!(!focusedBlock_2 || !focusedWindow)) return [3 /*break*/, 28];
+                        if (!(!focusedBlock_2 || !focusedWindow)) return [3 /*break*/, 38];
                         firstSidebarWindow = windows[0];
                         uid = firstSidebarWindow === null || firstSidebarWindow === void 0 ? void 0 : firstSidebarWindow['page-uid'];
-                        if (!uid) return [3 /*break*/, 24];
+                        if (!uid) return [3 /*break*/, 34];
                         return [4 /*yield*/, window.roamAlphaAPI.ui.mainWindow.openPage({
                                 page: {
                                     uid: uid,
                                 },
                             })];
-                    case 23:
-                        _a.sent();
-                        return [3 /*break*/, 26];
-                    case 24:
+                    case 33:
+                        _j.sent();
+                        return [3 /*break*/, 36];
+                    case 34:
                         uid = firstSidebarWindow['block-uid'];
                         return [4 /*yield*/, window.roamAlphaAPI.ui.mainWindow.openBlock({
                                 block: {
                                     uid: uid,
                                 },
                             })];
-                    case 25:
-                        _a.sent();
-                        _a.label = 26;
-                    case 26: return [4 /*yield*/, window.roamAlphaAPI.ui.rightSidebar.removeWindow({
+                    case 35:
+                        _j.sent();
+                        _j.label = 36;
+                    case 36: return [4 /*yield*/, window.roamAlphaAPI.ui.rightSidebar.removeWindow({
                             window: {
                                 'block-uid': uid,
                                 type: firstSidebarWindow.type,
                             },
                         })];
-                    case 27:
-                        _a.sent();
+                    case 37:
+                        _j.sent();
                         return [2 /*return*/];
-                    case 28:
+                    case 38:
                         nextWindow = void 0;
                         nextWindowIdx = windows.indexOf(focusedWindow) + 1;
                         // TODO there may only be one sidebar window, meaning closing it is just focusing on main view
@@ -3324,10 +3306,10 @@
                             },
                         });
                         return [4 /*yield*/, focusOnWindow(nextWindow)];
-                    case 29:
-                        _a.sent();
-                        _a.label = 30;
-                    case 30: return [2 /*return*/];
+                    case 39:
+                        _j.sent();
+                        _j.label = 40;
+                    case 40: return [2 /*return*/];
                 }
             });
         }); });
