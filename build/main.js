@@ -2537,7 +2537,7 @@
                                 open: false,
                             },
                         });
-                        return [4 /*yield*/, ((_b = (_a = window.roamAlphaAPI.q("[:find (pull ?e [:block/string :block/children :block/order :block/uid {:block/_refs 2} {:block/children 2}]) :in $ ?uid :where [?e :block/uid ?uid]]", blockUid)) === null || _a === void 0 ? void 0 : _a[0]) === null || _b === void 0 ? void 0 : _b[0])];
+                        return [4 /*yield*/, ((_b = (_a = window.roamAlphaAPI.q("[:find (pull ?e [:block/string :block/order :block/uid {:block/_refs 2} {:block/children 2}]) :in $ ?uid :where [?e :block/uid ?uid]]", blockUid)) === null || _a === void 0 ? void 0 : _a[0]) === null || _b === void 0 ? void 0 : _b[0])];
                     case 1:
                         block = _e.sent();
                         blockStr = block.string;
@@ -2612,7 +2612,7 @@
                     case 0:
                         today = new Date();
                         todayUid = toRoamDateUid(today);
-                        return [4 /*yield*/, ((_b = (_a = window.roamAlphaAPI.q("[:find (pull ?e [:node/title :block/string :block/children :block/order :block/uid {:block/_refs 2} {:block/children 2}]) :in $ ?uid :where [?e :block/uid ?uid]]", pageUid)) === null || _a === void 0 ? void 0 : _a[0]) === null || _b === void 0 ? void 0 : _b[0])];
+                        return [4 /*yield*/, ((_b = (_a = window.roamAlphaAPI.q("[:find (pull ?e [:node/title :block/string :block/order :block/uid {:block/_refs 2} {:block/children 2}]) :in $ ?uid :where [?e :block/uid ?uid]]", pageUid)) === null || _a === void 0 ? void 0 : _a[0]) === null || _b === void 0 ? void 0 : _b[0])];
                     case 1:
                         page = _e.sent();
                         pageTitle = page.title;

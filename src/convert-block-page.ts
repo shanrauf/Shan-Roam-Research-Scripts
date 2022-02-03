@@ -31,7 +31,7 @@ async function convertBlockToPage(blockUid: string): Promise<void> {
   });
 
   const block: RoamQPullBlock = await window.roamAlphaAPI.q(
-    `[:find (pull ?e [:block/string :block/children :block/order :block/uid {:block/_refs 2} {:block/children 2}]) :in $ ?uid :where [?e :block/uid ?uid]]`,
+    `[:find (pull ?e [:block/string :block/order :block/uid {:block/_refs 2} {:block/children 2}]) :in $ ?uid :where [?e :block/uid ?uid]]`,
     blockUid
   )?.[0]?.[0];
   const blockStr = block.string;
@@ -89,7 +89,7 @@ async function convertPageToBlock(pageUid: string): Promise<void> {
   const todayUid = toRoamDateUid(today);
 
   const page: RoamQPullBlock = await window.roamAlphaAPI.q(
-    `[:find (pull ?e [:node/title :block/string :block/children :block/order :block/uid {:block/_refs 2} {:block/children 2}]) :in $ ?uid :where [?e :block/uid ?uid]]`,
+    `[:find (pull ?e [:node/title :block/string :block/order :block/uid {:block/_refs 2} {:block/children 2}]) :in $ ?uid :where [?e :block/uid ?uid]]`,
     pageUid
   )?.[0]?.[0];
 
