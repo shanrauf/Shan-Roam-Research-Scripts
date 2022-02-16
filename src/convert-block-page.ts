@@ -46,7 +46,8 @@ export async function convertBlockToPage(blockUid: string): Promise<void> {
 
   // Now find that page's UID
   const newPageUid = await window.roamAlphaAPI.q(
-    `[:find ?uid :where [?e :node/title "${blockStr}"] [?e :block/uid ?uid]]`
+    `[:find ?uid :in $ ?block-string :where [?e :node/title ?block-string] [?e :block/uid ?uid]]`,
+    blockStr
   )[0][0];
 
   if (block?.children) {

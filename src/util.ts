@@ -16,9 +16,12 @@ export async function findOrCreateCurrentDNPUid(): Promise<string> {
   const todayUid = toRoamDateUid(todayDate);
 
   // Find or create the DNP page
-  const dnpPageExists = await window.roamAlphaAPI.q(`
-  [:find ?e :where [?e :block/uid "${todayUid}"]]
-  `)?.[0]?.[0];
+  const dnpPageExists = await window.roamAlphaAPI.q(
+    `
+  [:find ?e :in $ ?today-uid :where [?e :block/uid ?today-uid]]
+  `,
+    todayUid
+  )?.[0]?.[0];
 
   if (!dnpPageExists) {
     const todayDateTitle = toRoamDate(todayDate);

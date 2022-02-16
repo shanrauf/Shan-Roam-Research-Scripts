@@ -2503,7 +2503,7 @@
                     case 0:
                         todayDate = new Date();
                         todayUid = toRoamDateUid(todayDate);
-                        return [4 /*yield*/, ((_b = (_a = window.roamAlphaAPI.q("\n  [:find ?e :where [?e :block/uid \"".concat(todayUid, "\"]]\n  "))) === null || _a === void 0 ? void 0 : _a[0]) === null || _b === void 0 ? void 0 : _b[0])];
+                        return [4 /*yield*/, ((_b = (_a = window.roamAlphaAPI.q("\n  [:find ?e :in $ ?today-uid :where [?e :block/uid ?today-uid]]\n  ", todayUid)) === null || _a === void 0 ? void 0 : _a[0]) === null || _b === void 0 ? void 0 : _b[0])];
                     case 1:
                         dnpPageExists = _c.sent();
                         if (!!dnpPageExists) return [3 /*break*/, 3];
@@ -2551,7 +2551,7 @@
                     case 2:
                         // Create the page and update the block like this so it looks instant
                         _e.sent();
-                        return [4 /*yield*/, window.roamAlphaAPI.q("[:find ?uid :where [?e :node/title \"".concat(blockStr, "\"] [?e :block/uid ?uid]]"))[0][0]];
+                        return [4 /*yield*/, window.roamAlphaAPI.q("[:find ?uid :in $ ?block-string :where [?e :node/title ?block-string] [?e :block/uid ?uid]]", blockStr)[0][0]];
                     case 3:
                         newPageUid = _e.sent();
                         if (!(block === null || block === void 0 ? void 0 : block.children)) return [3 /*break*/, 7];
@@ -2717,7 +2717,7 @@
                     case 0: return [4 /*yield*/, findOrCreateCurrentDNPUid()];
                     case 1:
                         todayUid = _c.sent();
-                        return [4 /*yield*/, ((_b = (_a = window.roamAlphaAPI.q("[:find ?attr-uid :in $ ?page-uid\n      :where [?p :block/uid ?page-uid]\n             [?p :block/children ?c]\n             [?a :node/title \"".concat(archivedNotes, "\"]\n             [?c :block/refs ?a]\n             [?c :block/uid ?attr-uid]]"), todayUid)) === null || _a === void 0 ? void 0 : _a[0]) === null || _b === void 0 ? void 0 : _b[0])];
+                        return [4 /*yield*/, ((_b = (_a = window.roamAlphaAPI.q("[:find ?attr-uid :in $ ?page-uid ?archived-notes-title\n      :where [?p :block/uid ?page-uid]\n             [?p :block/children ?c]\n             [?a :node/title ?archived-notes-title]\n             [?c :block/refs ?a]\n             [?c :block/uid ?attr-uid]]", todayUid, archivedNotes)) === null || _a === void 0 ? void 0 : _a[0]) === null || _b === void 0 ? void 0 : _b[0])];
                     case 2:
                         archivedNotesAttributeUid = _c.sent();
                         if (!!archivedNotesAttributeUid) return [3 /*break*/, 5];
@@ -2992,7 +2992,7 @@
                     case 0:
                         uid = w === null || w === void 0 ? void 0 : w['page-uid'];
                         if (!uid) return [3 /*break*/, 3];
-                        return [4 /*yield*/, ((_b = (_a = window.roamAlphaAPI.q("\n    [:find ?uid :where [?e :block/uid \"".concat(uid, "\"] [?e :block/children ?c] [?c :block/order 0] [?c :block/uid ?uid]]\n    "))) === null || _a === void 0 ? void 0 : _a[0]) === null || _b === void 0 ? void 0 : _b[0])];
+                        return [4 /*yield*/, ((_b = (_a = window.roamAlphaAPI.q("\n    [:find ?uid :in $ ?block-uid :where [?e :block/uid ?block-uid] [?e :block/children ?c] [?c :block/order 0] [?c :block/uid ?uid]]\n    ", uid)) === null || _a === void 0 ? void 0 : _a[0]) === null || _b === void 0 ? void 0 : _b[0])];
                     case 1:
                         firstChildUid = _c.sent();
                         if (!firstChildUid)
@@ -3031,7 +3031,7 @@
                         return [4 /*yield*/, window.roamAlphaAPI.util.generateUID()];
                     case 2:
                         blockUid = _a.sent();
-                        order = window.roamAlphaAPI.q("\n [:find [?c ...] :where [?e :block/uid \"".concat(todayUid, "\"] [?e :block/children ?c]]")).length;
+                        order = window.roamAlphaAPI.q("\n [:find [?c ...] :in ?today-uid :where [?e :block/uid ?today-uid] [?e :block/children ?c]]", todayUid).length;
                         return [4 /*yield*/, window.roamAlphaAPI.data.block.create({
                                 location: {
                                     'parent-uid': todayUid,
@@ -3135,7 +3135,7 @@
                         pageTitle = editingPageTitleEl.firstElementChild.innerHTML;
                         if (!pageTitle)
                             return [2 /*return*/];
-                        return [4 /*yield*/, ((_e = (_d = window.roamAlphaAPI.q("[:find ?uid :where [?e :node/title \"".concat(pageTitle, "\"] [?e :block/uid ?uid]]"))) === null || _d === void 0 ? void 0 : _d[0]) === null || _e === void 0 ? void 0 : _e[0])];
+                        return [4 /*yield*/, ((_e = (_d = window.roamAlphaAPI.q("[:find ?uid :in $ ?page-title :where [?e :node/title ?page-title] [?e :block/uid ?uid]]", pageTitle)) === null || _d === void 0 ? void 0 : _d[0]) === null || _e === void 0 ? void 0 : _e[0])];
                     case 8:
                         pageUid = _j.sent();
                         return [3 /*break*/, 13];
@@ -3180,6 +3180,8 @@
                             windowOrder = key - 2;
                         }
                         roamWindow = windows[windowOrder];
+                        if (!roamWindow)
+                            return [2 /*return*/];
                         if (roamWindow.type === 'graph' || roamWindow.type == 'mentions')
                             return [2 /*return*/];
                         return [4 /*yield*/, focusOnWindow(roamWindow)];

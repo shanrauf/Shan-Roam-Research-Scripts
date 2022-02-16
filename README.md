@@ -30,9 +30,13 @@ if (!existing) {
 
 ### Convert a block to a page: `Ctrl + Shift + W`
 
+(note: if the block has 200+ backlinks, they may not all be converted because of Roam's API limit...)
+
 ![Convert a block to a page](public/readme/block-to-page.gif)
 
 ### Convert a page to a block: `Ctrl + Shift + Q`
+
+(note: if the block has 200+ backlinks, they may not all be converted because of Roam's API limit...)
 
 Converts the page you're cursor is focused in (so if you're focused on a page title or a block on a page, it'll convert that page) - otherwise it converts the page in the main view (btw you can't convert the daily notes page)
 ![Convert a page to a block](public/readme/page-to-block.gif)

@@ -9,13 +9,14 @@ async function getOrCreateArchivedNotesAttribute(): Promise<string> {
 
   // Get or create Archived Notes attribute on the page
   let archivedNotesAttributeUid = await window.roamAlphaAPI.q(
-    `[:find ?attr-uid :in $ ?page-uid
+    `[:find ?attr-uid :in $ ?page-uid ?archived-notes-title
       :where [?p :block/uid ?page-uid]
              [?p :block/children ?c]
-             [?a :node/title "${archivedNotes}"]
+             [?a :node/title ?archived-notes-title]
              [?c :block/refs ?a]
              [?c :block/uid ?attr-uid]]`,
-    todayUid
+    todayUid,
+    archivedNotes
   )?.[0]?.[0];
 
   if (!archivedNotesAttributeUid) {

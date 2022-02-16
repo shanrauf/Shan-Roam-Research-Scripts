@@ -68,9 +68,12 @@ async function focusOnWindow(w: RoamWindow) {
   // Apparently Roam doesn't focus on the first child for you for pages
   const uid = w?.['page-uid'];
   if (uid) {
-    const firstChildUid = await window.roamAlphaAPI.q(`
-    [:find ?uid :where [?e :block/uid "${uid}"] [?e :block/children ?c] [?c :block/order 0] [?c :block/uid ?uid]]
-    `)?.[0]?.[0];
+    const firstChildUid = await window.roamAlphaAPI.q(
+      `
+    [:find ?uid :in $ ?block-uid :where [?e :block/uid ?block-uid] [?e :block/children ?c] [?c :block/order 0] [?c :block/uid ?uid]]
+    `,
+      uid
+    )?.[0]?.[0];
     if (!firstChildUid) return;
 
     await window.roamAlphaAPI.ui.setBlockFocusAndSelection({
@@ -93,8 +96,11 @@ async function createDNPBlockAndFocus(ctrlSelected: boolean) {
   // Create a block at the bottom of DNP and focus on it (like a quick capture command)
   const todayUid = await findOrCreateCurrentDNPUid();
   const blockUid = await window.roamAlphaAPI.util.generateUID();
-  const order = window.roamAlphaAPI.q(`
- [:find [?c ...] :where [?e :block/uid "${todayUid}"] [?e :block/children ?c]]`).length;
+  const order = window.roamAlphaAPI.q(
+    `
+ [:find [?c ...] :in ?today-uid :where [?e :block/uid ?today-uid] [?e :block/children ?c]]`,
+    todayUid
+  ).length;
 
   await window.roamAlphaAPI.data.block.create({
     location: {
@@ -174,7 +180,8 @@ function setupKeyboardShortcuts(): void {
         if (!pageTitle) return;
 
         pageUid = await window.roamAlphaAPI.q(
-          `[:find ?uid :where [?e :node/title "${pageTitle}"] [?e :block/uid ?uid]]`
+          `[:find ?uid :in $ ?page-title :where [?e :node/title ?page-title] [?e :block/uid ?uid]]`,
+          pageTitle
         )?.[0]?.[0];
       } else if (currentBlockUid) {
         pageUid = await window.roamAlphaAPI.q(
@@ -212,6 +219,8 @@ function setupKeyboardShortcuts(): void {
         windowOrder = key - 2;
       }
       const roamWindow = windows[windowOrder];
+      if (!roamWindow) return;
+
       if (roamWindow.type === 'graph' || roamWindow.type == 'mentions') return;
       await focusOnWindow(roamWindow);
     } else if (e.altKey && (e.key === 'z' || e.key === 'x')) {
