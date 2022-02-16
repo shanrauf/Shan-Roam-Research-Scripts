@@ -98,7 +98,7 @@ async function createDNPBlockAndFocus(ctrlSelected: boolean) {
   const blockUid = await window.roamAlphaAPI.util.generateUID();
   const order = window.roamAlphaAPI.q(
     `
- [:find [?c ...] :in ?today-uid :where [?e :block/uid ?today-uid] [?e :block/children ?c]]`,
+ [:find [?c ...] :in $ ?today-uid :where [?e :block/uid ?today-uid] [?e :block/children ?c]]`,
     todayUid
   ).length;
 

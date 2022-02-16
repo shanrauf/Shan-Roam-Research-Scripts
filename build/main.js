@@ -3031,7 +3031,7 @@
                         return [4 /*yield*/, window.roamAlphaAPI.util.generateUID()];
                     case 2:
                         blockUid = _a.sent();
-                        order = window.roamAlphaAPI.q("\n [:find [?c ...] :in ?today-uid :where [?e :block/uid ?today-uid] [?e :block/children ?c]]", todayUid).length;
+                        order = window.roamAlphaAPI.q("\n [:find [?c ...] :in $ ?today-uid :where [?e :block/uid ?today-uid] [?e :block/children ?c]]", todayUid).length;
                         return [4 /*yield*/, window.roamAlphaAPI.data.block.create({
                                 location: {
                                     'parent-uid': todayUid,
