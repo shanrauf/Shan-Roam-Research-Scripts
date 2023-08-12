@@ -1,4 +1,4 @@
-import { toRoamDateUid, findOrCreateCurrentDNPUid } from './util';
+import { findOrCreateCurrentDNPUid } from './util';
 import { RoamQPullBlock } from './types';
 
 function getUidsFromId(id: string) {
@@ -86,8 +86,7 @@ export async function convertBlockToPage(blockUid: string): Promise<void> {
 }
 
 export async function convertPageToBlock(pageUid: string): Promise<void> {
-  const today = new Date();
-  const todayUid = toRoamDateUid(today);
+  const todayUid = await findOrCreateCurrentDNPUid();
   const focusedWindow = window.roamAlphaAPI.ui.getFocusedBlock();
   const onMainView = !window.roamAlphaAPI.ui.rightSidebar
     .getWindows()
