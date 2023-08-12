@@ -1,36 +1,34 @@
 import format from 'date-fns/format';
 
-export function toRoamDateUid(d: Date) {
-  return isNaN(d.valueOf()) ? '' : format(d, 'MM-dd-yyyy');
-}
-
-const toRoamDate = (d: Date) =>
-  isNaN(d.valueOf()) ? '' : format(d, 'MMMM do, yyyy');
-
 export const getGraph = (): string =>
   /^#\/app\/([^/]*?)(?:\/page\/.{9,10})?$/.exec(window.location.hash)?.[1] ||
   '';
 
 export async function findOrCreateCurrentDNPUid(): Promise<string> {
   const todayDate = new Date();
-  const todayUid = toRoamDateUid(todayDate);
+  
+  // 8-11-23, Roam temporarily broke UIDs for DNP pages. I am now going to rely on page titles instead of UIDs...
+  const todayTitle: string = window.roamAlphaAPI.util.dateToPageTitle(todayDate);
+  let todayUid: string = window.roamAlphaAPI.util.dateToPageUid(todayDate);
 
   // Find or create the DNP page
   const dnpPageExists = await window.roamAlphaAPI.q(
     `
-  [:find ?e :in $ ?today-uid :where [?e :block/uid ?today-uid]]
+  [:find [(pull ?e [:block/uid])] :in $ ?today-title :where [?e :node/title ?today-title]]
   `,
-    todayUid
-  )?.[0]?.[0];
+    todayTitle
+  )?.[0];
 
   if (!dnpPageExists) {
-    const todayDateTitle = toRoamDate(todayDate);
     await window.roamAlphaAPI.data.page.create({
       page: {
         uid: todayUid,
-        title: todayDateTitle,
+        title: todayTitle,
       },
     });
+  }
+  else {
+    todayUid = dnpPageExists.uid;
   }
 
   return todayUid;
