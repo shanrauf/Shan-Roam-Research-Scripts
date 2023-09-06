@@ -4,6 +4,7 @@ import { convertBlockToPage, convertPageToBlock } from './convert-block-page';
 import { archiveBlock } from './archive-block';
 import { refactorBlock } from './refactor-block';
 import { setupAliasTabKeybind } from './alias-tab';
+import { setupWebgazer } from './webgazer';
 
 const extensionId = 'shan-personal-scripts';
 
@@ -347,4 +348,5 @@ function setupKeyboardShortcuts(): void {
 console.log('Initializing keyboard shortcuts');
 setupKeyboardShortcuts();
 setupAliasTabKeybind();
+// setupWebgazer();
 console.log(`Initialized ${extensionId}`);

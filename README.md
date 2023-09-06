@@ -2,23 +2,13 @@
 
 Shan's collection of Roam Research scripts that significantly minimize friction in my work.
 
-## Installation Guide
+## Webcam-based Eye Tracking
 
-1. Go to [[roam/js]] and paste the following code in a `/javascript` code block:
+Look at a block with your eyes and press F4 to "click" into it to start typing (replaces a mouse).
 
-```
-var existing = document.getElementById("roam/js/shan-personal-scripts");
-if (!existing) {
-  var extension = document.createElement("script");
-  extension.src = "https://pacific-beach-36446.herokuapp.com/main.js";
-  extension.id = "roam/js/shan-personal-scripts";
-  extension.async = true;
-  extension.type = "text/javascript";
-  document.getElementsByTagName("head")[0].appendChild(extension);
-}
-```
+![Roam webcam-based eye tracking demo](public/readme/roam-eye-tracking-demo.gif)
 
-## Commands
+## Nice Commands
 
 ### Archive block: `Ctrl + Shift + Delete`
 
@@ -51,3 +41,20 @@ Converts the page you're cursor is focused in (so if you're focused on a page ti
 ### Focus on specific Roam window tab: `Alt + Number`
 - (the `-` key focuses on the last window in the sidebar)
 - Note: This will work in reverse on plain Roam; I use CSS to reverse the order of sidebar pages (TODO, add a CSS snippet here)
+
+
+## Installation Guide
+
+1. Go to [[roam/js]] and paste the following code in a `/javascript` code block:
+
+```
+var existing = document.getElementById("roam/js/shan-personal-scripts");
+if (!existing) {
+  var extension = document.createElement("script");
+  extension.src = "https://pacific-beach-36446.herokuapp.com/main.js";
+  extension.id = "roam/js/shan-personal-scripts";
+  extension.async = true;
+  extension.type = "text/javascript";
+  document.getElementsByTagName("head")[0].appendChild(extension);
+}
+```
